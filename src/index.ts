@@ -13,63 +13,94 @@ interface To {
   to: (a: Graphic | number, b?: number) => MethodSelector | undefined;
 }
 
-export class Led {
-  static from(a: Graphic | number, b?: number): To | undefined {
-    const getLeftFromCenter = (graphic: Graphic): number => {
-      return graphic.get('left') + graphic.get('width') / 2;
-    };
-    const getTopFromCenter = (graphic: Graphic): number => {
-      return graphic.get('top') + graphic.get('height') / 2;
-    };
+interface ToCtx extends FromCtx {
+  endLeft: number;
+  endTop: number;
+}
 
-    let startLeft: number, startTop: number;
+interface ILed {
+  from: (a: Graphic | number, b?: number) => To | undefined;
+}
+
+interface FromCtx {
+  startLeft: number;
+  startTop: number;
+}
+
+const Led: ILed = (() => {
+  const getGraphicCenterCoords = (graphic: Graphic): [number, number] => [
+    graphic.get('left'),
+    graphic.get('top'),
+  ];
+
+  const getOrValidateCoords = (
+    a: Graphic | number,
+    b?: number
+  ): [number, number] | undefined => {
     if (typeof a === 'number' && typeof b === 'number') {
-      startLeft = a;
-      startTop = b;
+      return [a, b];
     } else if (typeof a === 'object' && typeof b === 'undefined') {
-      startLeft = getLeftFromCenter(a);
-      startTop = getTopFromCenter(a);
+      return getGraphicCenterCoords(a);
     } else {
-      log('ERROR: Led received an incorrect input');
+      log('ERROR: LED received invalid input');
       return;
     }
+  };
 
+  const unitSelectorWithContext = ({}: MethodSelectorCtx): UnitSelector => {
     return {
-      to: (a: Graphic | number, b?: number): MethodSelector | undefined => {
-        let endLeft: number, endTop: number;
-        if (typeof a === 'number' && typeof b === 'number') {
-          endLeft = a;
-          endTop = b;
-        } else if (typeof a === 'object' && typeof b === 'undefined') {
-          endLeft = getLeftFromCenter(a);
-          endTop = getTopFromCenter(a);
-        } else {
-          log('ERROR: Led received an incorrect input');
-          return;
-        }
-
-        let distanceMethod: (pixelCalculatedDistance: number) => number;
-        const unitSelector = {
-          inPixels: () => {
-            return distanceMethod(
-              Math.sqrt((endTop - startTop) ** 2 + (endLeft - startLeft) ** 2)
-            );
-          },
-        };
-
-        return {
-          byPageDistance: (): UnitSelector => {
-            distanceMethod = (pixelCalculatedDistance: number) =>
-              pixelCalculatedDistance * 2;
-            return unitSelector;
-          },
-          byPythagoras: (): UnitSelector => {
-            distanceMethod = (pixelCalculatedDistance: number) =>
-              pixelCalculatedDistance;
-            return unitSelector;
-          },
-        };
+      inPixels: (output: number): number => {
+        return output;
       },
     };
-  }
-}
+  };
+
+  const methodSelectorWithContext = (context: ToCtx): MethodSelector => {
+    let calculateDistance: (
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number
+    ) => number;
+
+    return {
+      byPageDistance: (): UnitSelector => {
+        return unitSelectorWithContext({ ...context, calculateDistance });
+      },
+      byPythagoras: (): UnitSelector => {
+        return unitSelectorWithContext({ ...context, calculateDistance });
+      },
+    };
+  };
+
+  const toWithContext = ({ startLeft, startTop }: FromCtx): To => {
+    return {
+      to: (a: Graphic | number, b?: number): MethodSelector | undefined => {
+        const coords = getOrValidateCoords(a, b);
+        if (!coords) {
+          return;
+        }
+        const [endLeft, endTop] = coords;
+
+        return methodSelectorWithContext({
+          startLeft,
+          startTop,
+          endLeft,
+          endTop,
+        });
+      },
+    };
+  };
+
+  return {
+    from: (a: Graphic | number, b?: number): To | undefined => {
+      const coords = getOrValidateCoords(a, b);
+      if (!coords) {
+        return;
+      }
+      const [startLeft, startTop] = coords;
+
+      return toWithContext({ startLeft, startTop });
+    },
+  };
+})();
