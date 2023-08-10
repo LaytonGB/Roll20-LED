@@ -14,7 +14,9 @@ export enum MockObjectName {
   MOCK_ATTRIBUTE = 'mock_attribute',
   MOCK_CHARACTER = 'mock_character',
   MOCK_GRAPHIC = 'mock_graphic',
-  MOCK_PAGE = 'mock_page',
+  MOCK_PAGE_CURRENT = 'mock_page_current',
+  MOCK_PAGE_INACTIVE = 'mock_page_inactive',
+  MOCK_PAGE_VISITED = 'mock_page_visited',
   MOCK_PLAYER = 'mock_player',
 }
 
@@ -51,7 +53,9 @@ const mockObjectParams: {
       left: mockObjectConstants.mockGraphicLeft,
     },
   },
-  { type: 'page', id: MockObjectName.MOCK_PAGE },
+  { type: 'page', id: MockObjectName.MOCK_PAGE_CURRENT },
+  { type: 'page', id: MockObjectName.MOCK_PAGE_INACTIVE },
+  { type: 'page', id: MockObjectName.MOCK_PAGE_VISITED },
   { type: 'player', id: MockObjectName.MOCK_PLAYER },
 ];
 

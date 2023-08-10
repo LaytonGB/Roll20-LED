@@ -1,22 +1,75 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-export type EventType = 'add' | 'change' | 'destroy';
-export type Roll20Id = string;
-export type Roll20EventLabel = string;
-export type SearchKey = string;
-
-export interface ILedFactory {
-  new: () => ILed;
+interface UnitSelector {
+  inPixels: () => number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ILed {}
+interface MethodSelector {
+  byPageDistance: () => UnitSelector;
+  byPythagoras: () => UnitSelector;
+}
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const Locs: ILedFactory = (() => {
-  class Led implements ILed {}
+interface To {
+  to: (a: Graphic | number, b?: number) => MethodSelector | undefined;
+}
 
-  return {
-    new: () => new Led(),
-  };
-})();
+export class Led {
+  static from(a: Graphic | number, b?: number): To | undefined {
+    const getLeftFromCenter = (graphic: Graphic): number => {
+      return graphic.get('left') + graphic.get('width') / 2;
+    };
+    const getTopFromCenter = (graphic: Graphic): number => {
+      return graphic.get('top') + graphic.get('height') / 2;
+    };
+
+    let startLeft: number, startTop: number;
+    if (typeof a === 'number' && typeof b === 'number') {
+      startLeft = a;
+      startTop = b;
+    } else if (typeof a === 'object' && typeof b === 'undefined') {
+      startLeft = getLeftFromCenter(a);
+      startTop = getTopFromCenter(a);
+    } else {
+      log('ERROR: Led received an incorrect input');
+      return;
+    }
+
+    return {
+      to: (a: Graphic | number, b?: number): MethodSelector | undefined => {
+        let endLeft: number, endTop: number;
+        if (typeof a === 'number' && typeof b === 'number') {
+          endLeft = a;
+          endTop = b;
+        } else if (typeof a === 'object' && typeof b === 'undefined') {
+          endLeft = getLeftFromCenter(a);
+          endTop = getTopFromCenter(a);
+        } else {
+          log('ERROR: Led received an incorrect input');
+          return;
+        }
+
+        let distanceMethod: (pixelCalculatedDistance: number) => number;
+        const unitSelector = {
+          inPixels: () => {
+            return distanceMethod(
+              Math.sqrt((endTop - startTop) ** 2 + (endLeft - startLeft) ** 2)
+            );
+          },
+        };
+
+        return {
+          byPageDistance: (): UnitSelector => {
+            distanceMethod = (pixelCalculatedDistance: number) =>
+              pixelCalculatedDistance * 2;
+            return unitSelector;
+          },
+          byPythagoras: (): UnitSelector => {
+            distanceMethod = (pixelCalculatedDistance: number) =>
+              pixelCalculatedDistance;
+            return unitSelector;
+          },
+        };
+      },
+    };
+  }
+}
