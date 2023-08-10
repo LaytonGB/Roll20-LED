@@ -1,0 +1,75 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+import _ from 'lodash';
+
+import { MockObjectName } from './mocks/values';
+import mockValues from './mocks/values';
+import mockFunctions from './mocks/functions';
+
+import { ILed, Roll20EventLabel, Locs } from '..';
+import { MockRoll20Object } from './utils/roll20';
+
+// @ts-ignore not assignable error because of roll20 types
+global.createObj = () => {
+  return;
+};
+const createObjMock = jest.fn<
+  Roll20Object | undefined,
+  [ObjectType, { [property: string]: any }]
+>(mockFunctions.createObj);
+/* const createObjSpy =  */ jest
+  .spyOn(global, 'createObj')
+  // @ts-ignore CreateObj overload causing bad-selection error
+  .mockImplementation(createObjMock);
+
+// @ts-ignore
+global.getObj = () => {
+  return;
+};
+const getObjMock = jest.fn<Roll20Object | undefined, [ObjectType, string]>(
+  mockFunctions.getObj
+);
+/* const getObjSpy =  */ jest
+  .spyOn(global, 'getObj')
+  .mockImplementation(getObjMock);
+
+// @ts-ignore
+global.findObjs = () => {
+  return;
+};
+const findObjsMock = jest.fn<Roll20Object[], [{ [property: string]: any }]>(
+  mockFunctions.findObjs
+);
+/* const findObjsSpy =  */ jest
+  .spyOn(global, 'findObjs')
+  .mockImplementation(findObjsMock);
+
+// @ts-ignore
+global.filterObjs = () => {
+  return;
+};
+const filterObjsMock = jest.fn<
+  Roll20Object[],
+  [(obj: Roll20Object) => boolean]
+>(mockFunctions.filterObjs);
+/* const filterObjsSpy =  */ jest
+  .spyOn(global, 'filterObjs')
+  .mockImplementation(filterObjsMock);
+
+const { triggerEvent, on } = mockFunctions.getOnFunctions();
+// @ts-ignore
+global.on = () => {
+  return;
+};
+const onMock = jest.fn<void, [Roll20EventLabel, (obj: Roll20Object) => void]>(
+  on
+);
+// @ts-ignore On overload causing bad-selection error
+/* const onSpy = */ jest.spyOn(global, 'on').mockImplementation(onMock);
+
+global.log = () => {
+  return;
+};
+const logMock = jest.fn<void, [string]>(mockFunctions.log);
+/* const logSpy = */ jest.spyOn(global, 'log').mockImplementation(logMock);
