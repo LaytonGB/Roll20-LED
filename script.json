@@ -1,9 +1,9 @@
 {
-	"name": "LOCS",
-	"script": "locs.js",
+	"name": "LED",
+	"script": "led.js",
 	"version": "1.0",
 	"previousversions": [],
-	"description": "A Roll20 API that acts as a middle-man for all object fetching to improve the speeds of the Roll20 API.",
+	"description": "A Roll20 API that helps other APIs calculate distances quickly Roll20 API.",
 	"authors": "Layton Burchell",
 	"roll20userid": "1519557",
 	"patreon": "",

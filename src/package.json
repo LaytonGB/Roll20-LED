@@ -1,8 +1,8 @@
 {
   "name": "token-state-api",
   "version": "0.1.0",
-  "description": "An API for Roll20.net to enable the automatic caching of tokens, their positions, and specific token attributes.",
-  "main": "index.js",
+  "description": "A Roll20 API that helps other APIs calculate distances quickly Roll20 API.",
+  "main": "index.ts",
   "scripts": {
     "build": "npm run test && npm run lint && cd .. & npm run build",
     "test": "jest",
