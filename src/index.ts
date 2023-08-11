@@ -5,9 +5,11 @@ interface UnitSelector {
 }
 
 interface MethodSelector {
+  byFoure: () => UnitSelector;
   byManhattan: () => UnitSelector;
   byPageDistance: () => UnitSelector;
   byPythagoras: () => UnitSelector;
+  byThreeFive: () => UnitSelector;
 }
 
 interface TMethodSelectorContext {
@@ -33,6 +35,15 @@ interface TFromContext {
 }
 
 export const Led: ILed = (() => {
+  // TODO replace with actual
+  const page = {
+    get: (property: string): string | number | undefined => {
+      return {
+        pixelsPerSquare: 1,
+      }[property];
+    },
+  };
+
   const getGraphicCenterCoords = (graphic: Graphic): [number, number] => [
     graphic.get('left'),
     graphic.get('top'),
@@ -68,11 +79,22 @@ export const Led: ILed = (() => {
     endLeft,
     endTop,
   }: TToContext): MethodSelector => {
+    const pixelsPerSquare = page.get('pixelsPerSquare') as number;
     const dx = endLeft - startLeft;
     const dy = endTop - startTop;
 
+    const roundToGrid = (value: number) => {
+      return (value / pixelsPerSquare) * pixelsPerSquare;
+    };
+
     return {
+      byFoure: (): UnitSelector => {
+        // largest distance
+        const distance = Math.max(dx, dy);
+        return unitSelectorWithContext({ distance });
+      },
       byManhattan: (): UnitSelector => {
+        // sum of distances
         const distance = dx + dy;
         return unitSelectorWithContext({ distance });
       },
@@ -81,7 +103,14 @@ export const Led: ILed = (() => {
         return unitSelectorWithContext({ distance });
       },
       byPythagoras: (): UnitSelector => {
-        const distance = Math.sqrt(dx ** 2 + dy ** 2);
+        // exact distance, rounded to grid
+        const distance = roundToGrid(Math.round(Math.sqrt(dx ** 2 + dy ** 2)));
+        return unitSelectorWithContext({ distance });
+      },
+      byThreeFive: (): UnitSelector => {
+        // larger distance + 1/2 smaller distance rounded down to grid
+        const distance =
+          Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2));
         return unitSelectorWithContext({ distance });
       },
     };
