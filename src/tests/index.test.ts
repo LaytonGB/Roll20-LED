@@ -7,7 +7,7 @@ import { MockObjectName } from './mocks/values';
 import mockValues from './mocks/values';
 import mockFunctions from './mocks/functions';
 
-import { Led } from '..';
+import { Led, MethodSelector } from '..';
 import { MockRoll20Object } from './utils/roll20';
 
 // @ts-ignore not assignable error because of roll20 types
@@ -90,4 +90,35 @@ it('calculates arbitrary distance correctly', () => {
   // 10 ** 2 === 100
   // 100 + 100 === 200
   expect(calculatedDistance).toBe(Math.sqrt(200));
+});
+
+describe('correctly gets information from page', () => {
+  const midwayCalc = Led.from(0, 0)?.to(10, 10);
+
+  [
+    {
+      name: 'method selector',
+      func: (midwayCalc as MethodSelector).byPageDistance,
+    },
+    {
+      name: 'unit selector',
+      func: (midwayCalc as MethodSelector).byFoure().inPageUnits,
+    },
+  ].forEach(({ name, func }) => {
+    describe(name, () => {
+      it.todo('uses a page if present');
+      it.todo('prefers current page');
+      it.todo('logs an error if no page is present');
+    });
+  });
+});
+
+describe('calculates as expected', () => {
+  [{ name: '', value: '', expected: '' }].forEach(
+    ({ name, value, expected }) => {
+      describe(name, () => {
+        it.todo('is the expected value');
+      });
+    }
+  );
 });

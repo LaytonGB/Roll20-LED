@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-interface UnitSelector {
+export interface UnitSelector {
+  inPageUnits: () => number;
   inPixels: () => number;
 }
 
-interface MethodSelector {
+export interface MethodSelector {
   byFoure: () => UnitSelector;
   byManhattan: () => UnitSelector;
   byPageDistance: () => UnitSelector;
@@ -12,38 +13,30 @@ interface MethodSelector {
   byThreeFive: () => UnitSelector;
 }
 
-interface TMethodSelectorContext {
+export interface MethodSelectorContextType {
   distance: number;
+  pixelsPerSquare: number;
 }
 
-interface To {
+export interface To {
   to: (a: Graphic | number, b?: number) => MethodSelector | undefined;
 }
 
-interface TToContext extends TFromContext {
+export interface ToContextType extends FromContextType {
   endLeft: number;
   endTop: number;
 }
 
-interface ILed {
+export interface ILed {
   from: (a: Graphic | number, b?: number) => To | undefined;
 }
 
-interface TFromContext {
+export interface FromContextType {
   startLeft: number;
   startTop: number;
 }
 
 export const Led: ILed = (() => {
-  // TODO replace with actual
-  const page = {
-    get: (property: string): string | number | undefined => {
-      return {
-        pixelsPerSquare: 1,
-      }[property];
-    },
-  };
-
   const getGraphicCenterCoords = (graphic: Graphic): [number, number] => [
     graphic.get('left'),
     graphic.get('top'),
@@ -65,8 +58,12 @@ export const Led: ILed = (() => {
 
   const unitSelectorWithContext = ({
     distance,
-  }: TMethodSelectorContext): UnitSelector => {
+    pixelsPerSquare,
+  }: MethodSelectorContextType): UnitSelector => {
     return {
+      inPageUnits: (): number => {
+        return Math.floor(distance / pixelsPerSquare);
+      },
       inPixels: (): number => {
         return distance;
       },
@@ -78,7 +75,16 @@ export const Led: ILed = (() => {
     startTop,
     endLeft,
     endTop,
-  }: TToContext): MethodSelector => {
+  }: ToContextType): MethodSelector => {
+    // TODO replace with actual
+    const page = {
+      get: (property: string): string | number | undefined => {
+        return {
+          pixelsPerSquare: 1,
+        }[property];
+      },
+    };
+
     const pixelsPerSquare = page.get('pixelsPerSquare') as number;
     const dx = endLeft - startLeft;
     const dy = endTop - startTop;
@@ -91,32 +97,32 @@ export const Led: ILed = (() => {
       byFoure: (): UnitSelector => {
         // largest distance
         const distance = Math.max(dx, dy);
-        return unitSelectorWithContext({ distance });
+        return unitSelectorWithContext({ distance, pixelsPerSquare });
       },
       byManhattan: (): UnitSelector => {
         // sum of distances
         const distance = dx + dy;
-        return unitSelectorWithContext({ distance });
+        return unitSelectorWithContext({ distance, pixelsPerSquare });
       },
       byPageDistance: (): UnitSelector => {
         const distance = 1;
-        return unitSelectorWithContext({ distance });
+        return unitSelectorWithContext({ distance, pixelsPerSquare });
       },
       byPythagoras: (): UnitSelector => {
         // exact distance, rounded to grid
-        const distance = roundToGrid(Math.round(Math.sqrt(dx ** 2 + dy ** 2)));
-        return unitSelectorWithContext({ distance });
+        const distance = Math.sqrt(dx ** 2 + dy ** 2);
+        return unitSelectorWithContext({ distance, pixelsPerSquare });
       },
       byThreeFive: (): UnitSelector => {
         // larger distance + 1/2 smaller distance rounded down to grid
         const distance =
           Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2));
-        return unitSelectorWithContext({ distance });
+        return unitSelectorWithContext({ distance, pixelsPerSquare });
       },
     };
   };
 
-  const toWithContext = ({ startLeft, startTop }: TFromContext): To => {
+  const toWithContext = ({ startLeft, startTop }: FromContextType): To => {
     return {
       to: (a: Graphic | number, b?: number): MethodSelector | undefined => {
         const coords = getOrValidateCoords(a, b);
