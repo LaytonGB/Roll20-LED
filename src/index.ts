@@ -5,6 +5,7 @@ interface UnitSelector {
 }
 
 interface MethodSelector {
+  byManhattan: () => UnitSelector;
   byPageDistance: () => UnitSelector;
   byPythagoras: () => UnitSelector;
 }
@@ -67,14 +68,19 @@ export const Led: ILed = (() => {
     endLeft,
     endTop,
   }: TToContext): MethodSelector => {
+    const dx = endLeft - startLeft;
+    const dy = endTop - startTop;
+
     return {
+      byManhattan: (): UnitSelector => {
+        const distance = dx + dy;
+        return unitSelectorWithContext({ distance });
+      },
       byPageDistance: (): UnitSelector => {
         const distance = 1;
         return unitSelectorWithContext({ distance });
       },
       byPythagoras: (): UnitSelector => {
-        const dx = endLeft - startLeft;
-        const dy = endTop - startTop;
         const distance = Math.sqrt(dx ** 2 + dy ** 2);
         return unitSelectorWithContext({ distance });
       },
