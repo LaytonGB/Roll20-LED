@@ -9,11 +9,15 @@ interface MethodSelector {
   byPythagoras: () => UnitSelector;
 }
 
+interface TMethodSelectorContext {
+  distance: number;
+}
+
 interface To {
   to: (a: Graphic | number, b?: number) => MethodSelector | undefined;
 }
 
-interface ToCtx extends FromCtx {
+interface TToContext extends TFromContext {
   endLeft: number;
   endTop: number;
 }
@@ -22,12 +26,12 @@ interface ILed {
   from: (a: Graphic | number, b?: number) => To | undefined;
 }
 
-interface FromCtx {
+interface TFromContext {
   startLeft: number;
   startTop: number;
 }
 
-const Led: ILed = (() => {
+export const Led: ILed = (() => {
   const getGraphicCenterCoords = (graphic: Graphic): [number, number] => [
     graphic.get('left'),
     graphic.get('top'),
@@ -47,33 +51,37 @@ const Led: ILed = (() => {
     }
   };
 
-  const unitSelectorWithContext = ({}: MethodSelectorCtx): UnitSelector => {
+  const unitSelectorWithContext = ({
+    distance,
+  }: TMethodSelectorContext): UnitSelector => {
     return {
-      inPixels: (output: number): number => {
-        return output;
+      inPixels: (): number => {
+        return distance;
       },
     };
   };
 
-  const methodSelectorWithContext = (context: ToCtx): MethodSelector => {
-    let calculateDistance: (
-      x1: number,
-      y1: number,
-      x2: number,
-      y2: number
-    ) => number;
-
+  const methodSelectorWithContext = ({
+    startLeft,
+    startTop,
+    endLeft,
+    endTop,
+  }: TToContext): MethodSelector => {
     return {
       byPageDistance: (): UnitSelector => {
-        return unitSelectorWithContext({ ...context, calculateDistance });
+        const distance = 1;
+        return unitSelectorWithContext({ distance });
       },
       byPythagoras: (): UnitSelector => {
-        return unitSelectorWithContext({ ...context, calculateDistance });
+        const dx = endLeft - startLeft;
+        const dy = endTop - startTop;
+        const distance = Math.sqrt(dx ** 2 + dy ** 2);
+        return unitSelectorWithContext({ distance });
       },
     };
   };
 
-  const toWithContext = ({ startLeft, startTop }: FromCtx): To => {
+  const toWithContext = ({ startLeft, startTop }: TFromContext): To => {
     return {
       to: (a: Graphic | number, b?: number): MethodSelector | undefined => {
         const coords = getOrValidateCoords(a, b);

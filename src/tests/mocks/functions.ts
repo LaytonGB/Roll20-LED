@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { Roll20EventLabel } from '../..';
 import mockValues from './values';
-import { EventType } from '../..';
 
 function createObj(
   type: ObjectType,
@@ -88,27 +86,27 @@ function getTriggerEventWithBoundEvents(
   events: Map<string, ((...objs: Roll20Object[]) => void)[]>
 ) {
   function triggerEvent(
-    eventType: 'add',
+    string: 'add',
     objectType: ObjectType,
     obj: Roll20Object
   ): void;
   function triggerEvent(
-    eventType: 'change',
+    string: 'change',
     objectType: ObjectType,
     obj: Roll20Object,
     oldObj: Roll20Object
   ): void;
   function triggerEvent(
-    eventType: 'destroy',
+    string: 'destroy',
     objectType: ObjectType,
     obj: Roll20Object
   ): void;
   function triggerEvent(
-    eventType: EventType,
+    string: string,
     objectType: ObjectType,
     ...objs: Roll20Object[]
   ): void {
-    const eventLabel: Roll20EventLabel = `${eventType}:${objectType}`;
+    const eventLabel = `${string}:${objectType}`;
     events.get(eventLabel)?.forEach((callback) => callback(...objs));
   }
 
@@ -118,16 +116,13 @@ function getTriggerEventWithBoundEvents(
 function getOnWithBoundEvents(
   events: Map<string, ((...objs: Roll20Object[]) => void)[]>
 ) {
+  function on(eventLabel: string, callback: (obj: Roll20Object) => void): void;
   function on(
-    eventLabel: Roll20EventLabel,
-    callback: (obj: Roll20Object) => void
-  ): void;
-  function on(
-    eventLabel: Roll20EventLabel,
+    eventLabel: string,
     callback: (obj: Roll20Object, oldObj: Roll20Object) => void
   ): void;
   function on(
-    eventLabel: Roll20EventLabel,
+    eventLabel: string,
     callback: (...objs: Roll20Object[]) => void
   ): void {
     let callbackArray = events.get(eventLabel);
@@ -143,10 +138,7 @@ function getOnWithBoundEvents(
 }
 
 function getOnFunctions() {
-  const events = new Map<
-    Roll20EventLabel,
-    ((...objs: Roll20Object[]) => void)[]
-  >();
+  const events = new Map<string, ((...objs: Roll20Object[]) => void)[]>();
 
   return {
     triggerEvent: getTriggerEventWithBoundEvents(events),

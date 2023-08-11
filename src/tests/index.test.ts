@@ -83,7 +83,11 @@ beforeEach(() => {
 
 it('calculates arbitrary distance correctly', () => {
   const calculatedDistance = Led.from(10, 15)
-    ?.to(30, 35)
-    ?.byPageDistance()
+    ?.to(20, 25)
+    ?.byPythagoras()
     .inPixels();
+
+  // 10 ** 2 === 100
+  // 100 + 100 === 200
+  expect(calculatedDistance).toBe(Math.sqrt(200));
 });
