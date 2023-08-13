@@ -8,9 +8,9 @@ export interface UnitSelector {
 export interface MethodSelector {
   byFoure: () => UnitSelector;
   byManhattan: () => UnitSelector;
-  byPageDistance: () => UnitSelector;
   byPythagoras: () => UnitSelector;
   byThreeFive: () => UnitSelector;
+  byPageDistance: () => UnitSelector | undefined;
 }
 
 export interface MethodSelectorContextType {
@@ -70,22 +70,23 @@ export const Led: ILed = (() => {
     };
   };
 
+  // TODO clean this section, lots of retyped code
   const methodSelectorWithContext = ({
     startLeft,
     startTop,
     endLeft,
     endTop,
-  }: ToContextType): MethodSelector => {
-    // TODO replace with actual
-    const page = {
-      get: (property: string): string | number | undefined => {
-        return {
-          pixelsPerSquare: 1,
-        }[property];
-      },
-    };
+  }: ToContextType): MethodSelector | undefined => {
+    const campaign = Campaign();
+    const playerpageid = campaign.get('playerpageid');
+    const currentPage = getObj('page', playerpageid);
+    if (!currentPage) {
+      log('ERROR: could not find current page');
+      return;
+    }
 
-    const pixelsPerSquare = page.get('pixelsPerSquare') as number;
+    // TODO check this works
+    const pixelsPerSquare = currentPage.get('snapping_increment') * 70;
     const dx = endLeft - startLeft;
     const dy = endTop - startTop;
 
@@ -93,32 +94,81 @@ export const Led: ILed = (() => {
       return (value / pixelsPerSquare) * pixelsPerSquare;
     };
 
+    const foureCalc = (): number => {
+      return Math.max(dx, dy);
+    };
+    const byFoure = (): UnitSelector => {
+      // largest distance
+      const distance = foureCalc();
+      return unitSelectorWithContext({ distance, pixelsPerSquare });
+    };
+
+    const manhattanCalc = (): number => {
+      return dx + dy;
+    };
+    const byManhattan = (): UnitSelector => {
+      // sum of distances
+      const distance = manhattanCalc();
+      return unitSelectorWithContext({ distance, pixelsPerSquare });
+    };
+
+    const pythagorasCalc = (): number => {
+      return Math.sqrt(dx ** 2 + dy ** 2);
+    };
+    const byPythagoras = (): UnitSelector => {
+      // exact distance, rounded to grid
+      const distance = pythagorasCalc();
+      return unitSelectorWithContext({ distance, pixelsPerSquare });
+    };
+
+    const threeFiveCalc = (): number => {
+      return Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2));
+    };
+    const byThreeFive = (): UnitSelector => {
+      // larger distance + 1/2 smaller distance rounded down to grid
+      const distance = threeFiveCalc();
+      return unitSelectorWithContext({ distance, pixelsPerSquare });
+    };
+
+    const getPageDistanceMethod = (
+      diagonalType: string
+    ): (() => number) | undefined => {
+      switch (diagonalType) {
+        case 'foure':
+          return foureCalc;
+        case 'manhattan':
+          return manhattanCalc;
+        case 'pythagoras':
+          return pythagorasCalc;
+        case 'threefive':
+          return threeFiveCalc;
+        default:
+          return;
+      }
+    };
+    const byPageDistance = (): UnitSelector | undefined => {
+      const pageDiagonalType = currentPage?.get('diagonaltype');
+      if (!pageDiagonalType) {
+        log('ERROR: could not get page diagonal type');
+        return;
+      }
+
+      const distanceMethod = getPageDistanceMethod(pageDiagonalType);
+      if (!distanceMethod) {
+        log('ERROR: invalid page diagonaltype');
+        return;
+      }
+
+      const distance = distanceMethod();
+      return unitSelectorWithContext({ distance, pixelsPerSquare });
+    };
+
     return {
-      byFoure: (): UnitSelector => {
-        // largest distance
-        const distance = Math.max(dx, dy);
-        return unitSelectorWithContext({ distance, pixelsPerSquare });
-      },
-      byManhattan: (): UnitSelector => {
-        // sum of distances
-        const distance = dx + dy;
-        return unitSelectorWithContext({ distance, pixelsPerSquare });
-      },
-      byPageDistance: (): UnitSelector => {
-        const distance = 1;
-        return unitSelectorWithContext({ distance, pixelsPerSquare });
-      },
-      byPythagoras: (): UnitSelector => {
-        // exact distance, rounded to grid
-        const distance = Math.sqrt(dx ** 2 + dy ** 2);
-        return unitSelectorWithContext({ distance, pixelsPerSquare });
-      },
-      byThreeFive: (): UnitSelector => {
-        // larger distance + 1/2 smaller distance rounded down to grid
-        const distance =
-          Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2));
-        return unitSelectorWithContext({ distance, pixelsPerSquare });
-      },
+      byFoure,
+      byManhattan,
+      byPythagoras,
+      byThreeFive,
+      byPageDistance,
     };
   };
 

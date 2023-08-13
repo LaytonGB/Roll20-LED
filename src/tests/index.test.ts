@@ -106,9 +106,11 @@ describe('correctly gets information from page', () => {
     },
   ].forEach(({ name, func }) => {
     describe(name, () => {
-      it.todo('uses a page if present');
-      it.todo('prefers current page');
-      it.todo('logs an error if no page is present');
+      (findObjs({ _type: 'page' }) as Page[]).forEach((page) => {
+        it.todo('uses a page if present');
+        it.todo('prefers current page');
+        it.todo('logs an error if no page is present');
+      });
     });
   });
 });
