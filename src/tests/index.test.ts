@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import _ from 'lodash';
+import _, { capitalize, create } from 'lodash';
 
 import { MockObjectName } from './mocks/values';
 import mockValues from './mocks/values';
@@ -115,7 +115,7 @@ describe('correctly gets information from page', () => {
     throw new Error('player page not found');
   }
 
-  it('uses player page', () => {
+  it('uses player page + prefers player page', () => {
     const calculatedDistance = Led.from(...startPos)
       ?.to(...endPos)
       ?.byPageDistance()
@@ -123,18 +123,7 @@ describe('correctly gets information from page', () => {
     expect(calculatedDistance).toBe(20);
   });
 
-  it.todo('prefers player page');
   it.todo('uses supplied graphic page if possible');
   it.todo('errors if graphic pages are different');
   it.todo('logs an error if no page is present');
-});
-
-describe('calculates as expected', () => {
-  [{ name: '', value: '', expected: '' }].forEach(
-    ({ name, value, expected }) => {
-      describe(name, () => {
-        it.todo('is the expected value');
-      });
-    }
-  );
 });
