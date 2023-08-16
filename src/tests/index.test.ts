@@ -11,6 +11,18 @@ import { Led, MethodSelector } from '..';
 import { MockRoll20Object } from './utils/roll20';
 
 // @ts-ignore not assignable error because of roll20 types
+global.Campaign = () => {
+  return;
+};
+const CampaignMock = jest.fn<Roll20Object | undefined, []>(
+  mockFunctions.Campaign
+);
+/* const createObjSpy =  */ jest
+  .spyOn(global, 'Campaign')
+  // @ts-ignore CreateObj overload causing bad-selection error
+  .mockImplementation(CampaignMock);
+
+// @ts-ignore not assignable error because of roll20 types
 global.createObj = () => {
   return;
 };
@@ -94,25 +106,25 @@ it('calculates arbitrary distance correctly', () => {
 
 describe('correctly gets information from page', () => {
   const midwayCalc = Led.from(0, 0)?.to(10, 10);
+  const campaign = Campaign() as Campaign;
+  const playerpageid = campaign.get('playerpageid');
+  const playerPage = getObj('page', MockObjectName.MOCK_PAGE_CURRENT);
+  if (!playerPage) {
+    throw new Error('player page not found');
+  }
 
-  [
-    {
-      name: 'method selector',
-      func: (midwayCalc as MethodSelector).byPageDistance,
-    },
-    {
-      name: 'unit selector',
-      func: (midwayCalc as MethodSelector).byFoure().inPageUnits,
-    },
-  ].forEach(({ name, func }) => {
-    describe(name, () => {
-      (findObjs({ _type: 'page' }) as Page[]).forEach((page) => {
-        it.todo('uses a page if present');
-        it.todo('prefers current page');
-        it.todo('logs an error if no page is present');
-      });
-    });
+  it('uses player page', () => {
+    const calculatedDistance = Led.from(0, 0)
+      ?.to(10, 10)
+      ?.byPageDistance()
+      ?.inPageUnits();
+    expect(calculatedDistance).toBe(20);
   });
+
+  it.todo('prefers player page');
+  it.todo('uses supplied graphic page if possible');
+  it.todo('errors if graphic pages are different');
+  it.todo('logs an error if no page is present');
 });
 
 describe('calculates as expected', () => {

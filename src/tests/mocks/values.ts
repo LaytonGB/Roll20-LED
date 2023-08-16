@@ -12,6 +12,7 @@ export enum MockObjectName {
   CREATED_CHARACTER = 'created_character',
   CREATED_GRAPHIC = 'created_graphic',
   MOCK_ATTRIBUTE = 'mock_attribute',
+  MOCK_CAMPAIGN = 'mock_campaign',
   MOCK_CHARACTER = 'mock_character',
   MOCK_GRAPHIC = 'mock_graphic',
   MOCK_PAGE_CURRENT = 'mock_page_current',
@@ -35,6 +36,14 @@ const mockObjectParams: {
       max: mockObjectConstants.mockAttributeHpMax,
     },
   },
+  {
+    type: 'campaign',
+    id: MockObjectName.MOCK_CAMPAIGN,
+    properties: {
+      playerpageid: MockObjectName.MOCK_PAGE_CURRENT,
+      playerspecificpages: [MockObjectName.MOCK_PAGE_VISITED],
+    },
+  },
   { type: 'character', id: MockObjectName.CREATED_CHARACTER },
   { type: 'character', id: MockObjectName.MOCK_CHARACTER },
   {
@@ -53,9 +62,23 @@ const mockObjectParams: {
       left: mockObjectConstants.mockGraphicLeft,
     },
   },
-  { type: 'page', id: MockObjectName.MOCK_PAGE_CURRENT },
-  { type: 'page', id: MockObjectName.MOCK_PAGE_INACTIVE },
-  { type: 'page', id: MockObjectName.MOCK_PAGE_VISITED },
+  {
+    type: 'page',
+    id: MockObjectName.MOCK_PAGE_CURRENT,
+    properties: {
+      diagonaltype: 'manhattan',
+    },
+  },
+  {
+    type: 'page',
+    id: MockObjectName.MOCK_PAGE_INACTIVE,
+    properties: { diagonaltype: 'foure' },
+  },
+  {
+    type: 'page',
+    id: MockObjectName.MOCK_PAGE_VISITED,
+    properties: { diagonaltype: 'pythagoras' },
+  },
   { type: 'player', id: MockObjectName.MOCK_PLAYER },
 ];
 

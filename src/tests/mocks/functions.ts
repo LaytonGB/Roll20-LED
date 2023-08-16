@@ -2,6 +2,14 @@
 
 import mockValues from './values';
 
+function Campaign(): Roll20Object {
+  const campaign = mockValues.mockRequestResults.get('mock_campaign');
+  if (!campaign) {
+    throw new Error('campaign object not found');
+  }
+  return campaign;
+}
+
 function createObj(
   type: ObjectType,
   properties: { [property: string]: string }
@@ -151,6 +159,7 @@ function log(message: string): void {
 }
 
 export default {
+  Campaign,
   createObj,
   filterObjs,
   findObjs,

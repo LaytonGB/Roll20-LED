@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 export interface UnitSelector {
-  inPageUnits: () => number;
+  inPageUnits: (pageId?: string) => number;
   inPixels: () => number;
 }
 
@@ -10,7 +10,7 @@ export interface MethodSelector {
   byManhattan: () => UnitSelector;
   byPythagoras: () => UnitSelector;
   byThreeFive: () => UnitSelector;
-  byPageDistance: () => UnitSelector | undefined;
+  byPageDistance: (pageId?: string) => UnitSelector | undefined;
 }
 
 export interface MethodSelectorContextType {
@@ -51,7 +51,7 @@ export const Led: ILed = (() => {
     } else if (typeof a === 'object' && typeof b === 'undefined') {
       return getGraphicCenterCoords(a);
     } else {
-      log('ERROR: LED received invalid input');
+      log('LED-ERROR: LED received invalid input');
       return;
     }
   };
@@ -81,7 +81,7 @@ export const Led: ILed = (() => {
     const playerpageid = campaign.get('playerpageid');
     const currentPage = getObj('page', playerpageid);
     if (!currentPage) {
-      log('ERROR: could not find current page');
+      log('LED-ERROR: could not find current page');
       return;
     }
 
@@ -146,16 +146,21 @@ export const Led: ILed = (() => {
           return;
       }
     };
-    const byPageDistance = (): UnitSelector | undefined => {
+    const byPageDistance = (pageId?: string): UnitSelector | undefined => {
+      const page = pageId ? getObj('page', pageId) : currentPage;
+      if (!page) {
+        log('LED-ERROR: failed to get page');
+        return;
+      }
       const pageDiagonalType = currentPage?.get('diagonaltype');
       if (!pageDiagonalType) {
-        log('ERROR: could not get page diagonal type');
+        log('LED-ERROR: could not get page diagonal type');
         return;
       }
 
       const distanceMethod = getPageDistanceMethod(pageDiagonalType);
       if (!distanceMethod) {
-        log('ERROR: invalid page diagonaltype');
+        log('LED-ERROR: invalid page diagonaltype');
         return;
       }
 
