@@ -103,6 +103,8 @@ it('calculates arbitrary distance correctly', () => {
   expect(calculatedDistance).toBe(Math.sqrt(200));
 });
 
+it.todo('distance methods');
+
 describe('correctly gets information from page', () => {
   const startPos: [number, number] = [0, 0];
   const endPos: [number, number] = [10 * 70, 10 * 70]; // 70 pixels per grid square
@@ -162,6 +164,4 @@ describe('correctly gets information from page', () => {
     expect(calculatedDistance).toBeUndefined();
     expect(logSpy).not.toHaveBeenCalledTimes(logCallCount); // gets called more than once
   });
-
-  it.todo('logs an error if no page is present');
 });
