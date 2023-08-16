@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import _, { capitalize, create } from 'lodash';
+import _ from 'lodash';
 
 import { MockObjectName } from './mocks/values';
 import mockValues from './mocks/values';
 import mockFunctions from './mocks/functions';
 
-import { Led, MethodSelector } from '..';
-import { MockRoll20Object } from './utils/roll20';
+import { Led } from '..';
 
 // @ts-ignore not assignable error because of roll20 types
 global.Campaign = () => {
@@ -82,7 +81,7 @@ global.log = () => {
   return;
 };
 const logMock = jest.fn<void, [string]>(mockFunctions.log);
-/* const logSpy = */ jest.spyOn(global, 'log').mockImplementation(logMock);
+const logSpy = jest.spyOn(global, 'log').mockImplementation(logMock);
 
 let pages: Page[];
 beforeEach(() => {
@@ -140,7 +139,7 @@ describe('correctly gets information from page', () => {
     expect(calculatedDistance).toBe(20);
   });
 
-  it('errors if graphic pages are different', () => {
+  it('logs an error if graphic pages are different', () => {
     const currentPageGraphic = getObj(
       'graphic',
       MockObjectName.MOCK_GRAPHIC_ON_PLAYER_PAGE
@@ -153,12 +152,14 @@ describe('correctly gets information from page', () => {
       throw new Error('could not get graphic on current or visited page');
     }
 
-    expect(() =>
-      Led.from(visitedPageGraphic)
-        ?.to(currentPageGraphic)
-        ?.byPageDistance()
-        ?.inPageUnits()
-    ).toThrowError();
+    const logCallCount = logSpy.mock.calls.length;
+    const calculatedDistance = Led.from(visitedPageGraphic)
+      ?.to(currentPageGraphic)
+      ?.byPageDistance()
+      ?.inPageUnits();
+
+    expect(calculatedDistance).toBeUndefined();
+    expect(logSpy).toHaveBeenCalledTimes(logCallCount + 1);
   });
 
   it.todo('logs an error if no page is present');

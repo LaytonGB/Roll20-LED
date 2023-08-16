@@ -23,6 +23,7 @@ export interface To {
 }
 
 export interface ToContextType extends FromContextType {
+  endGraphicPageId: string | undefined;
   endLeft: number;
   endTop: number;
 }
@@ -32,20 +33,24 @@ export interface ILed {
 }
 
 export interface FromContextType {
+  startGraphicPageId: string | undefined;
   startLeft: number;
   startTop: number;
 }
 
 export const Led: ILed = (() => {
-  const getGraphicCenterCoords = (graphic: Graphic): [number, number] => [
+  const getGraphicCenterCoords = (
+    graphic: Graphic
+  ): [number, number, string] => [
     graphic.get('left'),
     graphic.get('top'),
+    graphic.get('_pageid'),
   ];
 
   const getOrValidateCoords = (
     a: Graphic | number,
     b?: number
-  ): [number, number] | undefined => {
+  ): [number, number] | [number, number, string] | undefined => {
     if (typeof a === 'number' && typeof b === 'number') {
       return [a, b];
     } else if (typeof a === 'object' && typeof b === 'undefined') {
@@ -72,23 +77,36 @@ export const Led: ILed = (() => {
 
   // TODO clean this section, lots of retyped code
   const methodSelectorWithContext = ({
+    startGraphicPageId,
     startLeft,
     startTop,
+    endGraphicPageId,
     endLeft,
     endTop,
   }: ToContextType): MethodSelector | undefined => {
-    const campaign = Campaign();
-    const playerpageid = campaign.get('playerpageid');
-    const currentPage = getObj('page', playerpageid);
-    if (!currentPage) {
-      log('LED-ERROR: could not find current page');
-      return;
-    }
-
-    // TODO check this works
     const pixelsPerSquare = 70;
     const dx = endLeft - startLeft;
     const dy = endTop - startTop;
+
+    const getPage = (): Page | undefined => {
+      if (startGraphicPageId) {
+        if (endGraphicPageId) {
+          if (startGraphicPageId !== endGraphicPageId) {
+            log(
+              'LEG-ERROR: supplied graphics are on different pages, could not get current page'
+            );
+            return;
+          }
+          return getObj('page', startGraphicPageId);
+        }
+        return getObj('page', startGraphicPageId);
+      } else if (endGraphicPageId) {
+        return getObj('page', endGraphicPageId);
+      }
+      const campaign = Campaign();
+      const playerpageid = campaign.get('playerpageid');
+      return getObj('page', playerpageid);
+    };
 
     const roundToGrid = (value: number) => {
       return (value / pixelsPerSquare) * pixelsPerSquare;
@@ -147,13 +165,13 @@ export const Led: ILed = (() => {
       }
     };
     const byPageDistance = (pageId?: string): UnitSelector | undefined => {
-      const page = pageId ? getObj('page', pageId) : currentPage;
+      const page = pageId ? getObj('page', pageId) : getPage();
       if (!page) {
         log('LED-ERROR: failed to get page');
         return;
       }
 
-      const pageDiagonalType = currentPage?.get('diagonaltype');
+      const pageDiagonalType = page?.get('diagonaltype');
       if (!pageDiagonalType) {
         log('LED-ERROR: could not get page diagonaltype');
         return;
@@ -178,18 +196,24 @@ export const Led: ILed = (() => {
     };
   };
 
-  const toWithContext = ({ startLeft, startTop }: FromContextType): To => {
+  const toWithContext = ({
+    startGraphicPageId,
+    startLeft,
+    startTop,
+  }: FromContextType): To => {
     return {
       to: (a: Graphic | number, b?: number): MethodSelector | undefined => {
         const coords = getOrValidateCoords(a, b);
         if (!coords) {
           return;
         }
-        const [endLeft, endTop] = coords;
+        const [endLeft, endTop, endGraphicPageId] = coords;
 
         return methodSelectorWithContext({
+          startGraphicPageId,
           startLeft,
           startTop,
+          endGraphicPageId,
           endLeft,
           endTop,
         });
@@ -203,9 +227,9 @@ export const Led: ILed = (() => {
       if (!coords) {
         return;
       }
-      const [startLeft, startTop] = coords;
+      const [startLeft, startTop, startGraphicPageId] = coords;
 
-      return toWithContext({ startLeft, startTop });
+      return toWithContext({ startGraphicPageId, startLeft, startTop });
     },
   };
 })();
