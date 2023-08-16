@@ -105,7 +105,9 @@ it('calculates arbitrary distance correctly', () => {
 });
 
 describe('correctly gets information from page', () => {
-  const midwayCalc = Led.from(0, 0)?.to(10, 10);
+  const startPos: [number, number] = [0, 0];
+  const endPos: [number, number] = [10 * 70, 10 * 70]; // 70 pixels per grid square
+
   const campaign = Campaign() as Campaign;
   const playerpageid = campaign.get('playerpageid');
   const playerPage = getObj('page', MockObjectName.MOCK_PAGE_CURRENT);
@@ -114,8 +116,8 @@ describe('correctly gets information from page', () => {
   }
 
   it('uses player page', () => {
-    const calculatedDistance = Led.from(0, 0)
-      ?.to(10, 10)
+    const calculatedDistance = Led.from(...startPos)
+      ?.to(...endPos)
       ?.byPageDistance()
       ?.inPageUnits();
     expect(calculatedDistance).toBe(20);

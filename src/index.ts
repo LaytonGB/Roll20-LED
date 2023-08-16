@@ -86,7 +86,7 @@ export const Led: ILed = (() => {
     }
 
     // TODO check this works
-    const pixelsPerSquare = currentPage.get('snapping_increment') * 70;
+    const pixelsPerSquare = 70;
     const dx = endLeft - startLeft;
     const dy = endTop - startTop;
 
@@ -152,9 +152,10 @@ export const Led: ILed = (() => {
         log('LED-ERROR: failed to get page');
         return;
       }
+
       const pageDiagonalType = currentPage?.get('diagonaltype');
       if (!pageDiagonalType) {
-        log('LED-ERROR: could not get page diagonal type');
+        log('LED-ERROR: could not get page diagonaltype');
         return;
       }
 

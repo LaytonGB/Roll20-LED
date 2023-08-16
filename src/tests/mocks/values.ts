@@ -67,17 +67,21 @@ const mockObjectParams: {
     id: MockObjectName.MOCK_PAGE_CURRENT,
     properties: {
       diagonaltype: 'manhattan',
+      scale_number: 5,
     },
   },
   {
     type: 'page',
     id: MockObjectName.MOCK_PAGE_INACTIVE,
-    properties: { diagonaltype: 'foure' },
+    properties: {
+      diagonaltype: 'foure',
+      scale_number: 5,
+    },
   },
   {
     type: 'page',
     id: MockObjectName.MOCK_PAGE_VISITED,
-    properties: { diagonaltype: 'pythagoras' },
+    properties: { diagonaltype: 'pythagoras', scale_number: 5 },
   },
   { type: 'player', id: MockObjectName.MOCK_PLAYER },
 ];
