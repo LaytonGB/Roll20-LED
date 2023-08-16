@@ -1,5 +1,5 @@
 {
-  "name": "LED",
+  "name": "led",
   "version": "1.0.0",
   "description": "A Roll20 API that helps other APIs calculate distances quickly Roll20 API.",
   "main": "locs.js",

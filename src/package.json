@@ -1,5 +1,5 @@
 {
-  "name": "token-state-api",
+  "name": "led",
   "version": "0.1.0",
   "description": "A Roll20 API that helps other APIs calculate distances quickly Roll20 API.",
   "main": "index.ts",
