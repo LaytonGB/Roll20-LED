@@ -70,6 +70,7 @@ const mockObjectParams: {
     properties: {
       top: 700,
       left: 700,
+      _pageid: MockObjectName.MOCK_PAGE_CURRENT,
     },
   },
   {
@@ -78,6 +79,7 @@ const mockObjectParams: {
     properties: {
       top: 0,
       left: 0,
+      _pageid: MockObjectName.MOCK_PAGE_VISITED,
     },
   },
   {
@@ -114,11 +116,6 @@ const mockRequestResults: Map<string, Roll20Object> = mockObjectParams.reduce(
 
 const mockRequestArgs = {
   ids: [...mockRequestResults.keys()],
-  trackerConfig: {
-    trackedAttributes: ['hp'],
-    trackedCharacterProperties: ['name'],
-    trackedGraphicProperties: ['top', 'left'],
-  },
 };
 
 export default {
