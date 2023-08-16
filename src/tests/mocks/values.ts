@@ -15,6 +15,8 @@ export enum MockObjectName {
   MOCK_CAMPAIGN = 'mock_campaign',
   MOCK_CHARACTER = 'mock_character',
   MOCK_GRAPHIC = 'mock_graphic',
+  MOCK_GRAPHIC_ON_PLAYER_PAGE = 'mock_graphic_on_player_page',
+  MOCK_GRAPHIC_ON_VISITED_PAGE = 'mock_graphic_on_visited_page',
   MOCK_PAGE_CURRENT = 'mock_page_current',
   MOCK_PAGE_INACTIVE = 'mock_page_inactive',
   MOCK_PAGE_VISITED = 'mock_page_visited',
@@ -60,6 +62,22 @@ const mockObjectParams: {
     properties: {
       top: mockObjectConstants.mockGraphicTop,
       left: mockObjectConstants.mockGraphicLeft,
+    },
+  },
+  {
+    type: 'graphic',
+    id: MockObjectName.MOCK_GRAPHIC_ON_PLAYER_PAGE,
+    properties: {
+      top: 700,
+      left: 700,
+    },
+  },
+  {
+    type: 'graphic',
+    id: MockObjectName.MOCK_GRAPHIC_ON_VISITED_PAGE,
+    properties: {
+      top: 0,
+      left: 0,
     },
   },
   {

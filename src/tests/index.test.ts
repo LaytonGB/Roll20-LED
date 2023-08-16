@@ -123,7 +123,43 @@ describe('correctly gets information from page', () => {
     expect(calculatedDistance).toBe(20);
   });
 
-  it.todo('uses supplied graphic page if possible');
-  it.todo('errors if graphic pages are different');
+  it('uses supplied graphic page if possible', () => {
+    const visitedPageGraphic = getObj(
+      'graphic',
+      MockObjectName.MOCK_GRAPHIC_ON_VISITED_PAGE
+    );
+    if (!visitedPageGraphic) {
+      throw new Error('could not get graphic on visited page');
+    }
+
+    const calculatedDistance = Led.from(visitedPageGraphic)
+      ?.to(...endPos)
+      ?.byPageDistance()
+      ?.inPageUnits();
+
+    expect(calculatedDistance).toBe(20);
+  });
+
+  it('errors if graphic pages are different', () => {
+    const currentPageGraphic = getObj(
+      'graphic',
+      MockObjectName.MOCK_GRAPHIC_ON_PLAYER_PAGE
+    );
+    const visitedPageGraphic = getObj(
+      'graphic',
+      MockObjectName.MOCK_GRAPHIC_ON_VISITED_PAGE
+    );
+    if (!currentPageGraphic || !visitedPageGraphic) {
+      throw new Error('could not get graphic on current or visited page');
+    }
+
+    expect(() =>
+      Led.from(visitedPageGraphic)
+        ?.to(currentPageGraphic)
+        ?.byPageDistance()
+        ?.inPageUnits()
+    ).toThrowError();
+  });
+
   it.todo('logs an error if no page is present');
 });
