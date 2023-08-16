@@ -1,10 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
-import _ from 'lodash';
 
 import { MockObjectName } from './mocks/values';
-import mockValues from './mocks/values';
 import mockFunctions from './mocks/functions';
 
 import { Led } from '..';
@@ -68,7 +64,7 @@ const filterObjsMock = jest.fn<
   .spyOn(global, 'filterObjs')
   .mockImplementation(filterObjsMock);
 
-const { triggerEvent, on } = mockFunctions.getOnFunctions();
+const { on } = mockFunctions.getOnFunctions();
 // @ts-ignore
 global.on = () => {
   return;
@@ -83,15 +79,6 @@ global.log = () => {
 const logMock = jest.fn<void, [string]>(mockFunctions.log);
 const logSpy = jest.spyOn(global, 'log').mockImplementation(logMock);
 
-let pages: Page[];
-beforeEach(() => {
-  pages = [
-    mockValues.mockRequestResults.get(MockObjectName.MOCK_PAGE_CURRENT),
-    mockValues.mockRequestResults.get(MockObjectName.MOCK_PAGE_INACTIVE),
-    mockValues.mockRequestResults.get(MockObjectName.MOCK_PAGE_VISITED),
-  ] as Page[];
-});
-
 it('calculates arbitrary distance correctly', () => {
   const calculatedDistance = Led.from(10, 15)
     ?.to(20, 25)
@@ -103,14 +90,17 @@ it('calculates arbitrary distance correctly', () => {
   expect(calculatedDistance).toBe(Math.sqrt(200));
 });
 
-it.todo('distance methods');
+describe('distance methods', () => {
+  it.todo('foure');
+  it.todo('manhattan');
+  it.todo('pythagoras');
+  it.todo('threeFive');
+});
 
 describe('correctly gets information from page', () => {
   const startPos: [number, number] = [0, 0];
   const endPos: [number, number] = [10 * 70, 10 * 70]; // 70 pixels per grid square
 
-  const campaign = Campaign() as Campaign;
-  const playerpageid = campaign.get('playerpageid');
   const playerPage = getObj('page', MockObjectName.MOCK_PAGE_CURRENT);
   if (!playerPage) {
     throw new Error('player page not found');
