@@ -18,19 +18,11 @@ const Led = (() => {
             return;
         }
     };
-    const roundToGrid = (value) => {
-        return (value / pixelsPerSquare) * pixelsPerSquare;
-    };
-    const unitSelectorWithContext = ({ distance, }) => {
-        return {
-            inPageUnits: () => {
-                return Math.floor(distance / pixelsPerSquare);
-            },
-            inPixels: () => {
-                return distance;
-            },
-        };
-    };
+    const roundToGrid = (value) => (value / pixelsPerSquare) * pixelsPerSquare;
+    const unitSelectorWithContext = ({ distance, }) => ({
+        inPageUnits: () => Math.floor(distance / pixelsPerSquare),
+        inPixels: () => distance,
+    });
     const methodSelectorWithContext = ({ startGraphicPageId, startLeft, startTop, endGraphicPageId, endLeft, endTop, }) => {
         const dx = endLeft - startLeft;
         const dy = endTop - startTop;
@@ -52,18 +44,10 @@ const Led = (() => {
             const playerpageid = campaign.get('playerpageid');
             return getObj('page', playerpageid);
         };
-        const foureCalc = () => {
-            return Math.max(dx, dy);
-        };
-        const manhattanCalc = () => {
-            return dx + dy;
-        };
-        const pythagorasCalc = () => {
-            return Math.sqrt(dx ** 2 + dy ** 2);
-        };
-        const threeFiveCalc = () => {
-            return Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2));
-        };
+        const foureCalc = () => Math.max(dx, dy);
+        const manhattanCalc = () => dx + dy;
+        const pythagorasCalc = () => Math.sqrt(dx ** 2 + dy ** 2);
+        const threeFiveCalc = () => Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2));
         const getPageDistanceMethod = (diagonalType) => {
             switch (diagonalType) {
                 case 'foure':
@@ -105,25 +89,23 @@ const Led = (() => {
             byPageDistance,
         };
     };
-    const toWithContext = ({ startGraphicPageId, startLeft, startTop, }) => {
-        return {
-            to: (a, b) => {
-                const coords = getOrValidateCoords(a, b);
-                if (!coords) {
-                    return;
-                }
-                const [endLeft, endTop, endGraphicPageId] = coords;
-                return methodSelectorWithContext({
-                    startGraphicPageId,
-                    startLeft,
-                    startTop,
-                    endGraphicPageId,
-                    endLeft,
-                    endTop,
-                });
-            },
-        };
-    };
+    const toWithContext = ({ startGraphicPageId, startLeft, startTop, }) => ({
+        to: (a, b) => {
+            const coords = getOrValidateCoords(a, b);
+            if (!coords) {
+                return;
+            }
+            const [endLeft, endTop, endGraphicPageId] = coords;
+            return methodSelectorWithContext({
+                startGraphicPageId,
+                startLeft,
+                startTop,
+                endGraphicPageId,
+                endLeft,
+                endTop,
+            });
+        },
+    });
     return {
         from: (a, b) => {
             const coords = getOrValidateCoords(a, b);
