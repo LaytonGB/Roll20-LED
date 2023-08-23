@@ -6,9 +6,7 @@ import mockFunctions from './mocks/functions';
 import { Led } from '..';
 
 // @ts-ignore not assignable error because of roll20 types
-global.Campaign = () => {
-  return;
-};
+global.Campaign = (): void => undefined;
 const CampaignMock = jest.fn<Roll20Object | undefined, []>(
   mockFunctions.Campaign
 );
@@ -18,9 +16,7 @@ const CampaignMock = jest.fn<Roll20Object | undefined, []>(
   .mockImplementation(CampaignMock);
 
 // @ts-ignore not assignable error because of roll20 types
-global.createObj = () => {
-  return;
-};
+global.createObj = (): void => undefined;
 const createObjMock = jest.fn<
   Roll20Object | undefined,
   [ObjectType, { [property: string]: any }]
@@ -31,9 +27,7 @@ const createObjMock = jest.fn<
   .mockImplementation(createObjMock);
 
 // @ts-ignore
-global.getObj = () => {
-  return;
-};
+global.getObj = (): void => undefined;
 const getObjMock = jest.fn<Roll20Object | undefined, [ObjectType, string]>(
   mockFunctions.getObj
 );
@@ -42,9 +36,7 @@ const getObjMock = jest.fn<Roll20Object | undefined, [ObjectType, string]>(
   .mockImplementation(getObjMock);
 
 // @ts-ignore
-global.findObjs = () => {
-  return;
-};
+global.findObjs = (): void => undefined;
 const findObjsMock = jest.fn<Roll20Object[], [{ [property: string]: any }]>(
   mockFunctions.findObjs
 );
@@ -53,9 +45,7 @@ const findObjsMock = jest.fn<Roll20Object[], [{ [property: string]: any }]>(
   .mockImplementation(findObjsMock);
 
 // @ts-ignore
-global.filterObjs = () => {
-  return;
-};
+global.filterObjs = (): void => undefined;
 const filterObjsMock = jest.fn<
   Roll20Object[],
   [(obj: Roll20Object) => boolean]
@@ -66,16 +56,12 @@ const filterObjsMock = jest.fn<
 
 const { on } = mockFunctions.getOnFunctions();
 // @ts-ignore
-global.on = () => {
-  return;
-};
+global.on = (): void => undefined;
 const onMock = jest.fn<void, [string, (obj: Roll20Object) => void]>(on);
 // @ts-ignore On overload causing bad-selection error
 /* const onSpy = */ jest.spyOn(global, 'on').mockImplementation(onMock);
 
-global.log = () => {
-  return;
-};
+global.log = (): void => undefined;
 const logMock = jest.fn<void, [string]>(mockFunctions.log);
 const logSpy = jest.spyOn(global, 'log').mockImplementation(logMock);
 
