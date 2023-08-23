@@ -37,7 +37,7 @@ export interface FromContextType {
   startTop: number;
 }
 
-export const Led: ILed = (() => {
+export const Led = ((): ILed => {
   const pixelsPerSquare = 70;
 
   const getGraphicCenterCoords = (
@@ -62,22 +62,15 @@ export const Led: ILed = (() => {
     }
   };
 
-  const roundToGrid = (value: number) => {
-    return (value / pixelsPerSquare) * pixelsPerSquare;
-  };
+  const roundToGrid = (value: number): number =>
+    (value / pixelsPerSquare) * pixelsPerSquare;
 
   const unitSelectorWithContext = ({
     distance,
-  }: MethodSelectorContextType): UnitSelector => {
-    return {
-      inPageUnits: (): number => {
-        return Math.floor(distance / pixelsPerSquare);
-      },
-      inPixels: (): number => {
-        return distance;
-      },
-    };
-  };
+  }: MethodSelectorContextType): UnitSelector => ({
+    inPageUnits: (): number => Math.floor(distance / pixelsPerSquare),
+    inPixels: (): number => distance,
+  });
 
   const methodSelectorWithContext = ({
     startGraphicPageId,
@@ -110,21 +103,14 @@ export const Led: ILed = (() => {
       return getObj('page', playerpageid);
     };
 
-    const foureCalc = (): number => {
-      return Math.max(dx, dy);
-    };
+    const foureCalc = (): number => Math.max(dx, dy);
 
-    const manhattanCalc = (): number => {
-      return dx + dy;
-    };
+    const manhattanCalc = (): number => dx + dy;
 
-    const pythagorasCalc = (): number => {
-      return Math.sqrt(dx ** 2 + dy ** 2);
-    };
+    const pythagorasCalc = (): number => Math.sqrt(dx ** 2 + dy ** 2);
 
-    const threeFiveCalc = (): number => {
-      return Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2));
-    };
+    const threeFiveCalc = (): number =>
+      Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2));
 
     const getPageDistanceMethod = (
       diagonalType: string
@@ -179,26 +165,24 @@ export const Led: ILed = (() => {
     startGraphicPageId,
     startLeft,
     startTop,
-  }: FromContextType): To => {
-    return {
-      to: (a: Graphic | number, b?: number): MethodSelector | undefined => {
-        const coords = getOrValidateCoords(a, b);
-        if (!coords) {
-          return;
-        }
-        const [endLeft, endTop, endGraphicPageId] = coords;
+  }: FromContextType): To => ({
+    to: (a: Graphic | number, b?: number): MethodSelector | undefined => {
+      const coords = getOrValidateCoords(a, b);
+      if (!coords) {
+        return;
+      }
+      const [endLeft, endTop, endGraphicPageId] = coords;
 
-        return methodSelectorWithContext({
-          startGraphicPageId,
-          startLeft,
-          startTop,
-          endGraphicPageId,
-          endLeft,
-          endTop,
-        });
-      },
-    };
-  };
+      return methodSelectorWithContext({
+        startGraphicPageId,
+        startLeft,
+        startTop,
+        endGraphicPageId,
+        endLeft,
+        endTop,
+      });
+    },
+  });
 
   return {
     from: (a: Graphic | number, b?: number): To | undefined => {
