@@ -7,9 +7,7 @@ import { Led } from '..';
 
 // @ts-ignore not assignable error because of roll20 types
 global.Campaign = (): void => undefined;
-const CampaignMock = jest.fn<Roll20Object | undefined, []>(
-  mockFunctions.Campaign
-);
+const CampaignMock = jest.fn<Roll20Object | undefined, []>(mockFunctions.Campaign);
 /* const createObjSpy =  */ jest
   .spyOn(global, 'Campaign')
   // @ts-ignore CreateObj overload causing bad-selection error
@@ -17,10 +15,9 @@ const CampaignMock = jest.fn<Roll20Object | undefined, []>(
 
 // @ts-ignore not assignable error because of roll20 types
 global.createObj = (): void => undefined;
-const createObjMock = jest.fn<
-  Roll20Object | undefined,
-  [ObjectType, { [property: string]: any }]
->(mockFunctions.createObj);
+const createObjMock = jest.fn<Roll20Object | undefined, [ObjectType, { [property: string]: any }]>(
+  mockFunctions.createObj
+);
 /* const createObjSpy =  */ jest
   .spyOn(global, 'createObj')
   // @ts-ignore CreateObj overload causing bad-selection error
@@ -28,31 +25,18 @@ const createObjMock = jest.fn<
 
 // @ts-ignore
 global.getObj = (): void => undefined;
-const getObjMock = jest.fn<Roll20Object | undefined, [ObjectType, string]>(
-  mockFunctions.getObj
-);
-/* const getObjSpy =  */ jest
-  .spyOn(global, 'getObj')
-  .mockImplementation(getObjMock);
+const getObjMock = jest.fn<Roll20Object | undefined, [ObjectType, string]>(mockFunctions.getObj);
+/* const getObjSpy =  */ jest.spyOn(global, 'getObj').mockImplementation(getObjMock);
 
 // @ts-ignore
 global.findObjs = (): void => undefined;
-const findObjsMock = jest.fn<Roll20Object[], [{ [property: string]: any }]>(
-  mockFunctions.findObjs
-);
-/* const findObjsSpy =  */ jest
-  .spyOn(global, 'findObjs')
-  .mockImplementation(findObjsMock);
+const findObjsMock = jest.fn<Roll20Object[], [{ [property: string]: any }]>(mockFunctions.findObjs);
+/* const findObjsSpy =  */ jest.spyOn(global, 'findObjs').mockImplementation(findObjsMock);
 
 // @ts-ignore
 global.filterObjs = (): void => undefined;
-const filterObjsMock = jest.fn<
-  Roll20Object[],
-  [(obj: Roll20Object) => boolean]
->(mockFunctions.filterObjs);
-/* const filterObjsSpy =  */ jest
-  .spyOn(global, 'filterObjs')
-  .mockImplementation(filterObjsMock);
+const filterObjsMock = jest.fn<Roll20Object[], [(obj: Roll20Object) => boolean]>(mockFunctions.filterObjs);
+/* const filterObjsSpy =  */ jest.spyOn(global, 'filterObjs').mockImplementation(filterObjsMock);
 
 const { on } = mockFunctions.getOnFunctions();
 // @ts-ignore
@@ -66,10 +50,7 @@ const logMock = jest.fn<void, [string]>(mockFunctions.log);
 const logSpy = jest.spyOn(global, 'log').mockImplementation(logMock);
 
 it('calculates arbitrary distance correctly', () => {
-  const calculatedDistance = Led.from(10, 15)
-    ?.to(20, 25)
-    ?.byPythagoras()
-    .inPixels();
+  const calculatedDistance = Led.from(10, 15)?.to(20, 25)?.byPythagoras().inPixels();
 
   // 10 ** 2 === 100
   // 100 + 100 === 200
@@ -88,9 +69,7 @@ describe('correctly gets information from page', () => {
   const endPos: [number, number] = [10 * 70, 10 * 70]; // 70 pixels per grid square
 
   const playerPage = getObj('page', MockObjectName.MOCK_PAGE_CURRENT);
-  if (!playerPage) {
-    throw new Error('player page not found');
-  }
+  if (!playerPage) throw new Error('player page not found');
 
   it('uses player page + prefers player page', () => {
     const calculatedDistance = Led.from(...startPos)
@@ -101,13 +80,8 @@ describe('correctly gets information from page', () => {
   });
 
   it('uses supplied graphic page if possible', () => {
-    const visitedPageGraphic = getObj(
-      'graphic',
-      MockObjectName.MOCK_GRAPHIC_ON_VISITED_PAGE
-    );
-    if (!visitedPageGraphic) {
-      throw new Error('could not get graphic on visited page');
-    }
+    const visitedPageGraphic = getObj('graphic', MockObjectName.MOCK_GRAPHIC_ON_VISITED_PAGE);
+    if (!visitedPageGraphic) throw new Error('could not get graphic on visited page');
 
     const calculatedDistance = Led.from(visitedPageGraphic)
       ?.to(...endPos)
@@ -119,23 +93,12 @@ describe('correctly gets information from page', () => {
   });
 
   it('logs an error if graphic pages are different', () => {
-    const currentPageGraphic = getObj(
-      'graphic',
-      MockObjectName.MOCK_GRAPHIC_ON_PLAYER_PAGE
-    );
-    const visitedPageGraphic = getObj(
-      'graphic',
-      MockObjectName.MOCK_GRAPHIC_ON_VISITED_PAGE
-    );
-    if (!currentPageGraphic || !visitedPageGraphic) {
-      throw new Error('could not get graphic on current or visited page');
-    }
+    const currentPageGraphic = getObj('graphic', MockObjectName.MOCK_GRAPHIC_ON_PLAYER_PAGE);
+    const visitedPageGraphic = getObj('graphic', MockObjectName.MOCK_GRAPHIC_ON_VISITED_PAGE);
+    if (!currentPageGraphic || !visitedPageGraphic) throw new Error('could not get graphic on current or visited page');
 
     const logCallCount = logSpy.mock.calls.length;
-    const calculatedDistance = Led.from(visitedPageGraphic)
-      ?.to(currentPageGraphic)
-      ?.byPageDistance()
-      ?.inPageUnits();
+    const calculatedDistance = Led.from(visitedPageGraphic)?.to(currentPageGraphic)?.byPageDistance()?.inPageUnits();
 
     expect(calculatedDistance).toBeUndefined();
     expect(logSpy).not.toHaveBeenCalledTimes(logCallCount); // gets called more than once
