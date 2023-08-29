@@ -66,7 +66,7 @@ describe('distance methods', () => {
 
 describe('correctly gets information from page', () => {
   const startPos: [number, number] = [0, 0];
-  const endPos: [number, number] = [10 * 70, 10 * 70]; // 70 pixels per grid square
+  const endPos: [number, number] = [10 * 70, 10 * 70]; // 70 pixels per grid square at default snapping
 
   const playerPage = getObj('page', MockObjectName.MOCK_PAGE_CURRENT);
   if (!playerPage) throw new Error('player page not found');
@@ -74,8 +74,8 @@ describe('correctly gets information from page', () => {
   it('uses player page + prefers player page', () => {
     const calculatedDistance = Led.from(...startPos)
       ?.to(...endPos)
-      ?.byPageDistance()
-      ?.inPageUnits();
+      ?.byPageDistance() // manhattan // 10 + 10 = 20
+      ?.inPageUnits(); // 1 unit per square // 20
     expect(calculatedDistance).toBe(20);
   });
 
@@ -83,13 +83,13 @@ describe('correctly gets information from page', () => {
     const visitedPageGraphic = getObj('graphic', MockObjectName.MOCK_GRAPHIC_ON_VISITED_PAGE);
     if (!visitedPageGraphic) throw new Error('could not get graphic on visited page');
 
-    const calculatedDistance = Led.from(visitedPageGraphic)
-      ?.to(...endPos)
-      ?.byPageDistance()
-      ?.inPageUnits();
+    const calculatedDistance = Led.from(visitedPageGraphic) // starts at 0,0
+      ?.to(...endPos) // ends 700,700 // 10,10 in squares // 20,20 including snapping increment
+      ?.byPageDistance() // pythagoras // sqrt(20 ** 2 + 20 ** 2) = 28.284
+      ?.inPageUnits(); // 5 units per square // rounded down to nearest value
 
     // using pythagoras for expected page
-    expect(calculatedDistance).toBe(Math.floor(Math.sqrt(10 ** 2 + 10 ** 2)));
+    expect(calculatedDistance).toBe(Math.floor(Math.sqrt(10 ** 2 + 10 ** 2)) * 5);
   });
 
   it('logs an error if graphic pages are different', () => {
@@ -103,4 +103,17 @@ describe('correctly gets information from page', () => {
     expect(calculatedDistance).toBeUndefined();
     expect(logSpy).not.toHaveBeenCalledTimes(logCallCount); // gets called more than once
   });
+
+  it.todo('adjusts correctly for snapping increment');
+
+  it.todo('adjusts correctly for unit number');
+});
+
+describe('conversion methods', () => {
+  it.todo('converts from pixels to squares');
+  it.todo('converts from pixels to page units');
+  it.todo('converts from squares to pixels');
+  it.todo('converts from squares to page units');
+  it.todo('converts from page units to pixels');
+  it.todo('converts from page units to squares');
 });

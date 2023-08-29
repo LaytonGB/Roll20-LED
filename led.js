@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 const Led = (() => {
-    const pixelsPerSquare = 70;
     const getGraphicCenterCoords = (graphic) => [
         graphic.get('left'),
         graphic.get('top'),
@@ -18,36 +17,61 @@ const Led = (() => {
             return;
         }
     };
-    const roundToGrid = (value) => (value / pixelsPerSquare) * pixelsPerSquare;
-    const unitSelectorWithContext = ({ distance, }) => ({
-        inPageUnits: () => Math.floor(distance / pixelsPerSquare),
+    const getPageByDetailsOrPlayerPage = (startGraphicPageId, endGraphicPageId, pageId) => {
+        if (pageId)
+            return getObj('page', pageId);
+        if (startGraphicPageId) {
+            if (endGraphicPageId) {
+                if (startGraphicPageId !== endGraphicPageId) {
+                    log('LEG-ERROR: supplied graphics are on different pages, could not get current page');
+                    return;
+                }
+                return getObj('page', startGraphicPageId);
+            }
+            return getObj('page', startGraphicPageId);
+        }
+        else if (endGraphicPageId) {
+            return getObj('page', endGraphicPageId);
+        }
+        const campaign = Campaign();
+        const playerpageid = campaign.get('playerpageid');
+        return getObj('page', playerpageid);
+    };
+    const getPixelsPerSquare = (page) => 70 / page.get('snapping_increment');
+    const getScaleNumber = (page) => page.get('scale_number');
+    const roundToGrid = (value, pixelsPerSquare) => Math.floor(value / pixelsPerSquare) * pixelsPerSquare;
+    const unitSelectorWithContext = ({ distance, page, startGraphicPageId, endGraphicPageId, }) => ({
+        inPageUnits: (pageId) => {
+            if (!page)
+                page = getPageByDetailsOrPlayerPage(startGraphicPageId, endGraphicPageId, pageId);
+            if (!page)
+                return;
+            const pixelsPerSquare = getPixelsPerSquare(page);
+            const scaleNumber = getScaleNumber(page);
+            if (!pixelsPerSquare || !scaleNumber)
+                return;
+            return Math.floor((distance / pixelsPerSquare) * scaleNumber);
+        },
         inPixels: () => distance,
+        inSquares: (pageId) => {
+            if (!page)
+                page = getPageByDetailsOrPlayerPage(startGraphicPageId, endGraphicPageId, pageId);
+            if (!page)
+                return;
+            const pixelsPerSquare = getPixelsPerSquare(page);
+            if (!pixelsPerSquare)
+                return;
+            return distance / pixelsPerSquare;
+        },
     });
     const methodSelectorWithContext = ({ startGraphicPageId, startLeft, startTop, endGraphicPageId, endLeft, endTop, }) => {
         const dx = endLeft - startLeft;
         const dy = endTop - startTop;
-        const getPage = () => {
-            if (startGraphicPageId) {
-                if (endGraphicPageId) {
-                    if (startGraphicPageId !== endGraphicPageId) {
-                        log('LEG-ERROR: supplied graphics are on different pages, could not get current page');
-                        return;
-                    }
-                    return getObj('page', startGraphicPageId);
-                }
-                return getObj('page', startGraphicPageId);
-            }
-            else if (endGraphicPageId) {
-                return getObj('page', endGraphicPageId);
-            }
-            const campaign = Campaign();
-            const playerpageid = campaign.get('playerpageid');
-            return getObj('page', playerpageid);
-        };
+        let page;
         const foureCalc = () => Math.max(dx, dy);
         const manhattanCalc = () => dx + dy;
         const pythagorasCalc = () => Math.sqrt(dx ** 2 + dy ** 2);
-        const threeFiveCalc = () => Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2));
+        const threeFiveCalc = (pixelsPerSquare) => Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2), pixelsPerSquare);
         const getPageDistanceMethod = (diagonalType) => {
             switch (diagonalType) {
                 case 'foure':
@@ -57,13 +81,21 @@ const Led = (() => {
                 case 'pythagoras':
                     return pythagorasCalc;
                 case 'threefive':
-                    return threeFiveCalc;
+                    return (pageId) => {
+                        page = getPageByDetailsOrPlayerPage(pageId, startGraphicPageId, endGraphicPageId);
+                        if (!page)
+                            return;
+                        const pixelsPerSquare = getPixelsPerSquare(page);
+                        if (!pixelsPerSquare)
+                            return;
+                        return threeFiveCalc(pixelsPerSquare);
+                    };
                 default:
                     return;
             }
         };
         const byPageDistance = (pageId) => {
-            const page = pageId ? getObj('page', pageId) : getPage();
+            const page = getPageByDetailsOrPlayerPage(startGraphicPageId, endGraphicPageId, pageId);
             if (!page) {
                 log('LED-ERROR: failed to get page');
                 return;
@@ -79,22 +111,34 @@ const Led = (() => {
                 return;
             }
             const distance = distanceMethod();
-            return unitSelectorWithContext({ distance });
+            if (!distance)
+                return;
+            return unitSelectorWithContext({ distance, page, startGraphicPageId, endGraphicPageId });
         };
         return {
-            byFoure: () => unitSelectorWithContext({ distance: foureCalc() }),
-            byManhattan: () => unitSelectorWithContext({ distance: manhattanCalc() }),
-            byPythagoras: () => unitSelectorWithContext({ distance: pythagorasCalc() }),
-            byThreeFive: () => unitSelectorWithContext({ distance: threeFiveCalc() }),
+            byFoure: () => unitSelectorWithContext({ distance: foureCalc(), startGraphicPageId, endGraphicPageId }),
+            byManhattan: () => unitSelectorWithContext({ distance: manhattanCalc(), startGraphicPageId, endGraphicPageId }),
+            byPythagoras: () => unitSelectorWithContext({ distance: pythagorasCalc(), startGraphicPageId, endGraphicPageId }),
+            byThreeFive: (pageId) => {
+                const page = getPageByDetailsOrPlayerPage(pageId, startGraphicPageId, endGraphicPageId);
+                if (!page)
+                    return;
+                const pixelsPerSquare = getPixelsPerSquare(page);
+                if (!pixelsPerSquare)
+                    return;
+                const distance = threeFiveCalc(pixelsPerSquare);
+                if (!distance)
+                    return;
+                return unitSelectorWithContext({ distance, page, startGraphicPageId, endGraphicPageId });
+            },
             byPageDistance,
         };
     };
-    const toWithContext = ({ startGraphicPageId, startLeft, startTop, }) => ({
+    const toWithContext = ({ startGraphicPageId, startLeft, startTop }) => ({
         to: (a, b) => {
             const coords = getOrValidateCoords(a, b);
-            if (!coords) {
+            if (!coords)
                 return;
-            }
             const [endLeft, endTop, endGraphicPageId] = coords;
             return methodSelectorWithContext({
                 startGraphicPageId,
@@ -106,12 +150,49 @@ const Led = (() => {
             });
         },
     });
+    const pageSelectorWithContext = ({ value, fromUnits, toUnits }) => ({
+        onPage(page) {
+            // TODO is it worth generalising here?
+            const pixelsFromStartValue = (value, fromUnits) => {
+                const pixelsPerSquare = page.get('snapping_increment') * 70;
+                if (fromUnits === 'pixels')
+                    return value;
+                if (fromUnits === 'squares')
+                    return value * pixelsPerSquare;
+                const scale_number = page.get('scale_number');
+                return (value * pixelsPerSquare) / scale_number;
+            };
+            const finalValueFromPixels = (value, toUnits) => {
+                const pixelsPerSquare = page.get('snapping_increment') * 70;
+                if (toUnits === 'pixels')
+                    return value;
+                if (toUnits === 'squares')
+                    return value / pixelsPerSquare;
+                const scale_number = page.get('scale_number');
+                return (value * scale_number) / pixelsPerSquare;
+            };
+            if (fromUnits === toUnits)
+                return value;
+            const pixels = pixelsFromStartValue(value, fromUnits);
+            return finalValueFromPixels(pixels, toUnits);
+        },
+    });
+    const toUnitsSelectorWithContext = (context) => ({
+        pageUnits: () => pageSelectorWithContext({ ...context, toUnits: 'pageUnits' }),
+        pixels: () => pageSelectorWithContext({ ...context, toUnits: 'pixels' }),
+        squares: () => pageSelectorWithContext({ ...context, toUnits: 'squares' }),
+    });
+    const fromUnitsSelectorWithContext = (context) => ({
+        pageUnits: () => toUnitsSelectorWithContext({ ...context, fromUnits: 'pageUnits' }),
+        pixels: () => toUnitsSelectorWithContext({ ...context, fromUnits: 'pixels' }),
+        squares: () => toUnitsSelectorWithContext({ ...context, fromUnits: 'squares' }),
+    });
     return {
-        from: (a, b) => {
+        convert: (value) => fromUnitsSelectorWithContext({ value }),
+        from(a, b) {
             const coords = getOrValidateCoords(a, b);
-            if (!coords) {
+            if (!coords)
                 return;
-            }
             const [startLeft, startTop, startGraphicPageId] = coords;
             return toWithContext({ startGraphicPageId, startLeft, startTop });
         },

@@ -1,24 +1,52 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-export interface UnitSelector {
-  inPageUnits: (pageId?: string) => number;
-  inPixels: () => number;
+export interface PageSelector {
+  onPage(page: Page): number | undefined;
 }
 
-export interface MethodSelector {
-  byFoure: () => UnitSelector;
-  byManhattan: () => UnitSelector;
-  byPythagoras: () => UnitSelector;
-  byThreeFive: () => UnitSelector;
-  byPageDistance: (pageId?: string) => UnitSelector | undefined;
+export interface ToUnitsSelectorContext extends FromUnitsSelectorContext {
+  toUnits: keyof ToUnitsSelector;
+}
+
+export interface ToUnitsSelector {
+  pageUnits(): PageSelector;
+  pixels(): PageSelector;
+  squares(): PageSelector;
+}
+
+export interface FromUnitsSelectorContext extends ConvertContextType {
+  fromUnits: keyof FromUnitsSelector;
+}
+
+export interface FromUnitsSelector {
+  pageUnits(): ToUnitsSelector;
+  pixels(): ToUnitsSelector;
+  squares(): ToUnitsSelector;
+}
+
+export interface ConvertContextType {
+  value: number;
+}
+
+export interface UnitSelector {
+  inPageUnits(pageId?: string): number | undefined;
+  inPixels(): number;
+  inSquares(pageId?: string): number | undefined;
 }
 
 export interface MethodSelectorContextType {
   distance: number;
+  page?: Page;
+  startGraphicPageId: string | undefined;
+  endGraphicPageId: string | undefined;
 }
 
-export interface To {
-  to: (a: Graphic | number, b?: number) => MethodSelector | undefined;
+export interface MethodSelector {
+  byFoure(): UnitSelector;
+  byManhattan(): UnitSelector;
+  byPythagoras(): UnitSelector;
+  byThreeFive(pageId?: string): UnitSelector | undefined;
+  byPageDistance(pageId?: string): UnitSelector | undefined;
 }
 
 export interface ToContextType extends FromContextType {
@@ -27,8 +55,8 @@ export interface ToContextType extends FromContextType {
   endTop: number;
 }
 
-export interface ILed {
-  from: (a: Graphic | number, b?: number) => To | undefined;
+export interface To {
+  to(a: Graphic | number, b?: number): MethodSelector | undefined;
 }
 
 export interface FromContextType {
@@ -37,12 +65,13 @@ export interface FromContextType {
   startTop: number;
 }
 
-export const Led = ((): ILed => {
-  const pixelsPerSquare = 70;
+export interface ILed {
+  convert(value: number): FromUnitsSelector;
+  from(a: Graphic | number, b?: number): To | undefined;
+}
 
-  const getGraphicCenterCoords = (
-    graphic: Graphic
-  ): [number, number, string] => [
+export const Led = ((): ILed => {
+  const getGraphicCenterCoords = (graphic: Graphic): [number, number, string] => [
     graphic.get('left'),
     graphic.get('top'),
     graphic.get('_pageid'),
@@ -62,14 +91,63 @@ export const Led = ((): ILed => {
     }
   };
 
-  const roundToGrid = (value: number): number =>
-    (value / pixelsPerSquare) * pixelsPerSquare;
+  const getPageByDetailsOrPlayerPage = (
+    startGraphicPageId: string | undefined,
+    endGraphicPageId: string | undefined,
+    pageId?: string
+  ): Page | undefined => {
+    if (pageId) return getObj('page', pageId);
+
+    if (startGraphicPageId) {
+      if (endGraphicPageId) {
+        if (startGraphicPageId !== endGraphicPageId) {
+          log('LEG-ERROR: supplied graphics are on different pages, could not get current page');
+          return;
+        }
+        return getObj('page', startGraphicPageId);
+      }
+      return getObj('page', startGraphicPageId);
+    } else if (endGraphicPageId) {
+      return getObj('page', endGraphicPageId);
+    }
+    const campaign = Campaign();
+    const playerpageid = campaign.get('playerpageid');
+    return getObj('page', playerpageid);
+  };
+
+  const getPixelsPerSquare = (page: Page): number | undefined => 70 / page.get('snapping_increment');
+
+  const getScaleNumber = (page: Page): number | undefined => page.get('scale_number');
+
+  const roundToGrid = (value: number, pixelsPerSquare: number): number =>
+    Math.floor(value / pixelsPerSquare) * pixelsPerSquare;
 
   const unitSelectorWithContext = ({
     distance,
+    page,
+    startGraphicPageId,
+    endGraphicPageId,
   }: MethodSelectorContextType): UnitSelector => ({
-    inPageUnits: (): number => Math.floor(distance / pixelsPerSquare),
-    inPixels: (): number => distance,
+    inPageUnits: (pageId?: string): number | undefined => {
+      if (!page) page = getPageByDetailsOrPlayerPage(startGraphicPageId, endGraphicPageId, pageId);
+      if (!page) return;
+
+      const pixelsPerSquare = getPixelsPerSquare(page);
+      const scaleNumber = getScaleNumber(page);
+      if (!pixelsPerSquare || !scaleNumber) return;
+
+      return Math.floor((distance / pixelsPerSquare) * scaleNumber);
+    },
+    inPixels: () => distance,
+    inSquares: (pageId?: string): number | undefined => {
+      if (!page) page = getPageByDetailsOrPlayerPage(startGraphicPageId, endGraphicPageId, pageId);
+      if (!page) return;
+
+      const pixelsPerSquare = getPixelsPerSquare(page);
+      if (!pixelsPerSquare) return;
+
+      return distance / pixelsPerSquare;
+    },
   });
 
   const methodSelectorWithContext = ({
@@ -82,26 +160,7 @@ export const Led = ((): ILed => {
   }: ToContextType): MethodSelector | undefined => {
     const dx = endLeft - startLeft;
     const dy = endTop - startTop;
-
-    const getPage = (): Page | undefined => {
-      if (startGraphicPageId) {
-        if (endGraphicPageId) {
-          if (startGraphicPageId !== endGraphicPageId) {
-            log(
-              'LEG-ERROR: supplied graphics are on different pages, could not get current page'
-            );
-            return;
-          }
-          return getObj('page', startGraphicPageId);
-        }
-        return getObj('page', startGraphicPageId);
-      } else if (endGraphicPageId) {
-        return getObj('page', endGraphicPageId);
-      }
-      const campaign = Campaign();
-      const playerpageid = campaign.get('playerpageid');
-      return getObj('page', playerpageid);
-    };
+    let page: Page | undefined;
 
     const foureCalc = (): number => Math.max(dx, dy);
 
@@ -109,12 +168,10 @@ export const Led = ((): ILed => {
 
     const pythagorasCalc = (): number => Math.sqrt(dx ** 2 + dy ** 2);
 
-    const threeFiveCalc = (): number =>
-      Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2));
+    const threeFiveCalc = (pixelsPerSquare: number): number | undefined =>
+      Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2), pixelsPerSquare);
 
-    const getPageDistanceMethod = (
-      diagonalType: string
-    ): (() => number) | undefined => {
+    const getPageDistanceMethod = (diagonalType: string): (() => number | undefined) | undefined => {
       switch (diagonalType) {
         case 'foure':
           return foureCalc;
@@ -123,13 +180,21 @@ export const Led = ((): ILed => {
         case 'pythagoras':
           return pythagorasCalc;
         case 'threefive':
-          return threeFiveCalc;
+          return (pageId?: string) => {
+            page = getPageByDetailsOrPlayerPage(pageId, startGraphicPageId, endGraphicPageId);
+            if (!page) return;
+
+            const pixelsPerSquare = getPixelsPerSquare(page);
+            if (!pixelsPerSquare) return;
+
+            return threeFiveCalc(pixelsPerSquare);
+          };
         default:
           return;
       }
     };
     const byPageDistance = (pageId?: string): UnitSelector | undefined => {
-      const page = pageId ? getObj('page', pageId) : getPage();
+      const page = getPageByDetailsOrPlayerPage(startGraphicPageId, endGraphicPageId, pageId);
       if (!page) {
         log('LED-ERROR: failed to get page');
         return;
@@ -148,29 +213,36 @@ export const Led = ((): ILed => {
       }
 
       const distance = distanceMethod();
-      return unitSelectorWithContext({ distance });
+      if (!distance) return;
+
+      return unitSelectorWithContext({ distance, page, startGraphicPageId, endGraphicPageId });
     };
 
     return {
-      byFoure: () => unitSelectorWithContext({ distance: foureCalc() }),
-      byManhattan: () => unitSelectorWithContext({ distance: manhattanCalc() }),
-      byPythagoras: () =>
-        unitSelectorWithContext({ distance: pythagorasCalc() }),
-      byThreeFive: () => unitSelectorWithContext({ distance: threeFiveCalc() }),
+      byFoure: () => unitSelectorWithContext({ distance: foureCalc(), startGraphicPageId, endGraphicPageId }),
+      byManhattan: () => unitSelectorWithContext({ distance: manhattanCalc(), startGraphicPageId, endGraphicPageId }),
+      byPythagoras: () => unitSelectorWithContext({ distance: pythagorasCalc(), startGraphicPageId, endGraphicPageId }),
+      byThreeFive: (pageId?: string): UnitSelector | undefined => {
+        const page = getPageByDetailsOrPlayerPage(pageId, startGraphicPageId, endGraphicPageId);
+        if (!page) return;
+
+        const pixelsPerSquare = getPixelsPerSquare(page);
+        if (!pixelsPerSquare) return;
+
+        const distance = threeFiveCalc(pixelsPerSquare);
+        if (!distance) return;
+
+        return unitSelectorWithContext({ distance, page, startGraphicPageId, endGraphicPageId });
+      },
       byPageDistance,
     };
   };
 
-  const toWithContext = ({
-    startGraphicPageId,
-    startLeft,
-    startTop,
-  }: FromContextType): To => ({
+  const toWithContext = ({ startGraphicPageId, startLeft, startTop }: FromContextType): To => ({
     to: (a: Graphic | number, b?: number): MethodSelector | undefined => {
       const coords = getOrValidateCoords(a, b);
-      if (!coords) {
-        return;
-      }
+      if (!coords) return;
+
       const [endLeft, endTop, endGraphicPageId] = coords;
 
       return methodSelectorWithContext({
@@ -184,12 +256,52 @@ export const Led = ((): ILed => {
     },
   });
 
+  const pageSelectorWithContext = ({ value, fromUnits, toUnits }: ToUnitsSelectorContext): PageSelector => ({
+    onPage(page: Page): number | undefined {
+      // TODO is it worth generalising here?
+      const pixelsFromStartValue = (value: number, fromUnits: keyof FromUnitsSelector): number => {
+        const pixelsPerSquare = page.get('snapping_increment') * 70;
+
+        if (fromUnits === 'pixels') return value;
+        if (fromUnits === 'squares') return value * pixelsPerSquare;
+        const scale_number = page.get('scale_number');
+        return (value * pixelsPerSquare) / scale_number;
+      };
+      const finalValueFromPixels = (value: number, toUnits: keyof ToUnitsSelector): number => {
+        const pixelsPerSquare = page.get('snapping_increment') * 70;
+
+        if (toUnits === 'pixels') return value;
+        if (toUnits === 'squares') return value / pixelsPerSquare;
+        const scale_number = page.get('scale_number');
+        return (value * scale_number) / pixelsPerSquare;
+      };
+
+      if (fromUnits === toUnits) return value;
+
+      const pixels = pixelsFromStartValue(value, fromUnits);
+      return finalValueFromPixels(pixels, toUnits);
+    },
+  });
+
+  const toUnitsSelectorWithContext = (context: FromUnitsSelectorContext): ToUnitsSelector => ({
+    pageUnits: (): PageSelector => pageSelectorWithContext({ ...context, toUnits: 'pageUnits' }),
+    pixels: (): PageSelector => pageSelectorWithContext({ ...context, toUnits: 'pixels' }),
+    squares: (): PageSelector => pageSelectorWithContext({ ...context, toUnits: 'squares' }),
+  });
+
+  const fromUnitsSelectorWithContext = (context: ConvertContextType): FromUnitsSelector => ({
+    pageUnits: (): ToUnitsSelector => toUnitsSelectorWithContext({ ...context, fromUnits: 'pageUnits' }),
+    pixels: (): ToUnitsSelector => toUnitsSelectorWithContext({ ...context, fromUnits: 'pixels' }),
+    squares: (): ToUnitsSelector => toUnitsSelectorWithContext({ ...context, fromUnits: 'squares' }),
+  });
+
   return {
-    from: (a: Graphic | number, b?: number): To | undefined => {
+    convert: (value: number): FromUnitsSelector => fromUnitsSelectorWithContext({ value }),
+
+    from(a: Graphic | number, b?: number): To | undefined {
       const coords = getOrValidateCoords(a, b);
-      if (!coords) {
-        return;
-      }
+      if (!coords) return;
+
       const [startLeft, startTop, startGraphicPageId] = coords;
 
       return toWithContext({ startGraphicPageId, startLeft, startTop });
