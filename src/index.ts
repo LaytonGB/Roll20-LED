@@ -158,8 +158,8 @@ export const Led = ((): ILed => {
     endLeft,
     endTop,
   }: ToContextType): MethodSelector | undefined => {
-    const dx = endLeft - startLeft;
-    const dy = endTop - startTop;
+    const dx = Math.abs(endLeft - startLeft);
+    const dy = Math.abs(endTop - startTop);
     let page: Page | undefined;
 
     const foureCalc = (): number => Math.max(dx, dy);
@@ -298,7 +298,7 @@ export const Led = ((): ILed => {
   return {
     convert: (value: number): FromUnitsSelector => fromUnitsSelectorWithContext({ value }),
 
-    from(a: Graphic | number, b?: number): To | undefined {
+    from: (a: Graphic | number, b?: number): To | undefined => {
       const coords = getOrValidateCoords(a, b);
       if (!coords) return;
 

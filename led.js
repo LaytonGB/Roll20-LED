@@ -65,8 +65,8 @@ const Led = (() => {
         },
     });
     const methodSelectorWithContext = ({ startGraphicPageId, startLeft, startTop, endGraphicPageId, endLeft, endTop, }) => {
-        const dx = endLeft - startLeft;
-        const dy = endTop - startTop;
+        const dx = Math.abs(endLeft - startLeft);
+        const dy = Math.abs(endTop - startTop);
         let page;
         const foureCalc = () => Math.max(dx, dy);
         const manhattanCalc = () => dx + dy;
@@ -189,7 +189,7 @@ const Led = (() => {
     });
     return {
         convert: (value) => fromUnitsSelectorWithContext({ value }),
-        from(a, b) {
+        from: (a, b) => {
             const coords = getOrValidateCoords(a, b);
             if (!coords)
                 return;

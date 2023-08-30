@@ -58,10 +58,16 @@ it('calculates arbitrary distance correctly', () => {
 });
 
 describe('distance methods', () => {
+  const startGraphic = getObj('graphic', 'MOCK_GRAPHIC_ON_CURRENT_PAGE_IN_POSITION_1') as Graphic;
+  const endGraphic = getObj('graphic', 'MOCK_GRAPHIC_ON_CURRENT_PAGE_IN_POSITION_2') as Graphic;
+
   it.todo('foure');
   it.todo('manhattan');
   it.todo('pythagoras');
-  it.todo('threeFive');
+  it('threeFive', () => {
+    const distance = Led.from(startGraphic)?.to(endGraphic)?.byThreeFive()?.inSquares();
+    expect(distance).toBe(2);
+  });
 });
 
 describe('correctly gets information from page', () => {
@@ -84,7 +90,7 @@ describe('correctly gets information from page', () => {
     if (!visitedPageGraphic) throw new Error('could not get graphic on visited page');
 
     const calculatedDistance = Led.from(visitedPageGraphic) // starts at 0,0
-      ?.to(...endPos) // ends 700,700 // 10,10 in squares // 20,20 including snapping increment
+      ?.to(...endPos) // ends at 700,700 // 10,10 in squares // 20,20 including snapping increment
       ?.byPageDistance() // pythagoras // sqrt(20 ** 2 + 20 ** 2) = 28.284
       ?.inPageUnits(); // 5 units per square // rounded down to nearest value
 

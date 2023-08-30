@@ -66,6 +66,24 @@ const mockObjectParams: {
   },
   {
     type: 'graphic',
+    id: 'MOCK_GRAPHIC_ON_CURRENT_PAGE_IN_POSITION_1',
+    properties: {
+      top: 70,
+      left: 70,
+      _pageid: MockObjectName.MOCK_PAGE_CURRENT,
+    },
+  },
+  {
+    type: 'graphic',
+    id: 'MOCK_GRAPHIC_ON_CURRENT_PAGE_IN_POSITION_2',
+    properties: {
+      left: 140,
+      top: 210,
+      _pageid: MockObjectName.MOCK_PAGE_CURRENT,
+    },
+  },
+  {
+    type: 'graphic',
     id: MockObjectName.MOCK_GRAPHIC_ON_PLAYER_PAGE,
     properties: {
       top: 700,
