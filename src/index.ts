@@ -44,7 +44,7 @@ export interface MethodSelectorContextType {
 export interface MethodSelector {
   byFoure(): UnitSelector;
   byManhattan(): UnitSelector;
-  byPythagoras(): UnitSelector;
+  byPythagorean(): UnitSelector;
   byThreeFive(pageId?: string): UnitSelector | undefined;
   byPageDistance(pageId?: string): UnitSelector | undefined;
 }
@@ -71,6 +71,8 @@ export interface ILed {
 }
 
 export const Led = ((): ILed => {
+  const errorPrefix = 'LED-ERROR:';
+
   const getGraphicCenterCoords = (graphic: Graphic): [number, number, string] => [
     graphic.get('left'),
     graphic.get('top'),
@@ -86,7 +88,7 @@ export const Led = ((): ILed => {
     } else if (typeof a === 'object' && typeof b === 'undefined') {
       return getGraphicCenterCoords(a);
     } else {
-      log('LED-ERROR: LED received invalid input');
+      log(`${errorPrefix} LED received invalid input`);
       return;
     }
   };
@@ -101,7 +103,7 @@ export const Led = ((): ILed => {
     if (startGraphicPageId) {
       if (endGraphicPageId) {
         if (startGraphicPageId !== endGraphicPageId) {
-          log('LEG-ERROR: supplied graphics are on different pages, could not get current page');
+          log(`${errorPrefix} supplied graphics are on different pages, could not get current page`);
           return;
         }
         return getObj('page', startGraphicPageId);
@@ -166,7 +168,7 @@ export const Led = ((): ILed => {
 
     const manhattanCalc = (): number => dx + dy;
 
-    const pythagorasCalc = (): number => Math.sqrt(dx ** 2 + dy ** 2);
+    const pythagoreanCalc = (): number => Math.sqrt(dx ** 2 + dy ** 2);
 
     const threeFiveCalc = (pixelsPerSquare: number): number | undefined =>
       Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2), pixelsPerSquare);
@@ -177,8 +179,8 @@ export const Led = ((): ILed => {
           return foureCalc;
         case 'manhattan':
           return manhattanCalc;
-        case 'pythagoras':
-          return pythagorasCalc;
+        case 'pythagorean':
+          return pythagoreanCalc;
         case 'threefive':
           return (pageId?: string) => {
             page = getPageByDetailsOrPlayerPage(pageId, startGraphicPageId, endGraphicPageId);
@@ -193,27 +195,31 @@ export const Led = ((): ILed => {
           return;
       }
     };
+
     const byPageDistance = (pageId?: string): UnitSelector | undefined => {
       const page = getPageByDetailsOrPlayerPage(startGraphicPageId, endGraphicPageId, pageId);
       if (!page) {
-        log('LED-ERROR: failed to get page');
+        log(`${errorPrefix} failed to get page`);
         return;
       }
 
       const pageDiagonalType = page?.get('diagonaltype');
       if (!pageDiagonalType) {
-        log('LED-ERROR: could not get page diagonaltype');
+        log(`${errorPrefix} could not get page diagonaltype`);
         return;
       }
 
       const distanceMethod = getPageDistanceMethod(pageDiagonalType);
       if (!distanceMethod) {
-        log('LED-ERROR: invalid page diagonaltype');
+        log(`${errorPrefix} invalid page diagonaltype`);
         return;
       }
 
       const distance = distanceMethod();
-      if (!distance) return;
+      if (distance === undefined) {
+        log(`${errorPrefix} error running distance method`);
+        return;
+      }
 
       return unitSelectorWithContext({ distance, page, startGraphicPageId, endGraphicPageId });
     };
@@ -221,7 +227,8 @@ export const Led = ((): ILed => {
     return {
       byFoure: () => unitSelectorWithContext({ distance: foureCalc(), startGraphicPageId, endGraphicPageId }),
       byManhattan: () => unitSelectorWithContext({ distance: manhattanCalc(), startGraphicPageId, endGraphicPageId }),
-      byPythagoras: () => unitSelectorWithContext({ distance: pythagorasCalc(), startGraphicPageId, endGraphicPageId }),
+      byPythagorean: () =>
+        unitSelectorWithContext({ distance: pythagoreanCalc(), startGraphicPageId, endGraphicPageId }),
       byThreeFive: (pageId?: string): UnitSelector | undefined => {
         const page = getPageByDetailsOrPlayerPage(pageId, startGraphicPageId, endGraphicPageId);
         if (!page) return;

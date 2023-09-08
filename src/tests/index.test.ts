@@ -50,7 +50,7 @@ const logMock = jest.fn<void, [string]>(mockFunctions.log);
 const logSpy = jest.spyOn(global, 'log').mockImplementation(logMock);
 
 it('calculates arbitrary distance correctly', () => {
-  const calculatedDistance = Led.from(10, 15)?.to(20, 25)?.byPythagoras().inPixels();
+  const calculatedDistance = Led.from(10, 15)?.to(20, 25)?.byPythagorean().inPixels();
 
   // 10 ** 2 === 100
   // 100 + 100 === 200

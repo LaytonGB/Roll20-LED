@@ -35,7 +35,7 @@ declare interface MethodSelectorContextType {
 declare interface MethodSelector {
     byFoure(): UnitSelector;
     byManhattan(): UnitSelector;
-    byPythagoras(): UnitSelector;
+    byPythagorean(): UnitSelector;
     byThreeFive(pageId?: string): UnitSelector | undefined;
     byPageDistance(pageId?: string): UnitSelector | undefined;
 }

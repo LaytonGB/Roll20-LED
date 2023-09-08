@@ -70,7 +70,7 @@ const Led = (() => {
         let page;
         const foureCalc = () => Math.max(dx, dy);
         const manhattanCalc = () => dx + dy;
-        const pythagorasCalc = () => Math.sqrt(dx ** 2 + dy ** 2);
+        const pythagoreanCalc = () => Math.sqrt(dx ** 2 + dy ** 2);
         const threeFiveCalc = (pixelsPerSquare) => Math.max(dx, dy) + roundToGrid(Math.floor(Math.min(dx, dy) / 2), pixelsPerSquare);
         const getPageDistanceMethod = (diagonalType) => {
             switch (diagonalType) {
@@ -78,8 +78,8 @@ const Led = (() => {
                     return foureCalc;
                 case 'manhattan':
                     return manhattanCalc;
-                case 'pythagoras':
-                    return pythagorasCalc;
+                case 'pythagorean':
+                    return pythagoreanCalc;
                 case 'threefive':
                     return (pageId) => {
                         page = getPageByDetailsOrPlayerPage(pageId, startGraphicPageId, endGraphicPageId);
@@ -111,14 +111,16 @@ const Led = (() => {
                 return;
             }
             const distance = distanceMethod();
-            if (!distance)
+            if (distance === undefined) {
+                log('LED-ERROR: error running distance method');
                 return;
+            }
             return unitSelectorWithContext({ distance, page, startGraphicPageId, endGraphicPageId });
         };
         return {
             byFoure: () => unitSelectorWithContext({ distance: foureCalc(), startGraphicPageId, endGraphicPageId }),
             byManhattan: () => unitSelectorWithContext({ distance: manhattanCalc(), startGraphicPageId, endGraphicPageId }),
-            byPythagoras: () => unitSelectorWithContext({ distance: pythagorasCalc(), startGraphicPageId, endGraphicPageId }),
+            byPythagorean: () => unitSelectorWithContext({ distance: pythagoreanCalc(), startGraphicPageId, endGraphicPageId }),
             byThreeFive: (pageId) => {
                 const page = getPageByDetailsOrPlayerPage(pageId, startGraphicPageId, endGraphicPageId);
                 if (!page)
