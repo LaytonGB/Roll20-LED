@@ -1,27 +1,29 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
+type ConversionUnits = 'pageUnits' | 'pixels' | 'squares';
+
 export interface PageSelector {
   onPage(page: Page): number | undefined;
 }
 
 export interface ToUnitsSelectorContext extends FromUnitsSelectorContext {
-  toUnits: keyof ToUnitsSelector;
+  toUnits: ConversionUnits;
 }
 
 export interface ToUnitsSelector {
-  pageUnits(): PageSelector;
-  pixels(): PageSelector;
-  squares(): PageSelector;
+  toPageUnits(): PageSelector;
+  toPixels(): PageSelector;
+  toSquares(): PageSelector;
 }
 
 export interface FromUnitsSelectorContext extends ConvertContextType {
-  fromUnits: keyof FromUnitsSelector;
+  fromUnits: ConversionUnits;
 }
 
 export interface FromUnitsSelector {
-  pageUnits(): ToUnitsSelector;
-  pixels(): ToUnitsSelector;
-  squares(): ToUnitsSelector;
+  fromPageUnits(): ToUnitsSelector;
+  fromPixels(): ToUnitsSelector;
+  fromSquares(): ToUnitsSelector;
 }
 
 export interface ConvertContextType {
@@ -101,12 +103,9 @@ export const Led = ((): ILed => {
     if (pageId) return getObj('page', pageId);
 
     if (startGraphicPageId) {
-      if (endGraphicPageId) {
-        if (startGraphicPageId !== endGraphicPageId) {
-          log(`${errorPrefix} supplied graphics are on different pages, could not get current page`);
-          return;
-        }
-        return getObj('page', startGraphicPageId);
+      if (endGraphicPageId && startGraphicPageId !== endGraphicPageId) {
+        log(`${errorPrefix} supplied graphics are on different pages, could not get current page`);
+        return;
       }
       return getObj('page', startGraphicPageId);
     } else if (endGraphicPageId) {
@@ -266,7 +265,7 @@ export const Led = ((): ILed => {
   const pageSelectorWithContext = ({ value, fromUnits, toUnits }: ToUnitsSelectorContext): PageSelector => ({
     onPage(page: Page): number | undefined {
       // TODO is it worth generalising here?
-      const pixelsFromStartValue = (value: number, fromUnits: keyof FromUnitsSelector): number => {
+      const pixelsFromStartValue = (value: number, fromUnits: ConversionUnits): number => {
         const pixelsPerSquare = page.get('snapping_increment') * 70;
 
         if (fromUnits === 'pixels') return value;
@@ -274,7 +273,7 @@ export const Led = ((): ILed => {
         const scale_number = page.get('scale_number');
         return (value * pixelsPerSquare) / scale_number;
       };
-      const finalValueFromPixels = (value: number, toUnits: keyof ToUnitsSelector): number => {
+      const finalValueFromPixels = (value: number, toUnits: ConversionUnits): number => {
         const pixelsPerSquare = page.get('snapping_increment') * 70;
 
         if (toUnits === 'pixels') return value;
@@ -291,15 +290,15 @@ export const Led = ((): ILed => {
   });
 
   const toUnitsSelectorWithContext = (context: FromUnitsSelectorContext): ToUnitsSelector => ({
-    pageUnits: (): PageSelector => pageSelectorWithContext({ ...context, toUnits: 'pageUnits' }),
-    pixels: (): PageSelector => pageSelectorWithContext({ ...context, toUnits: 'pixels' }),
-    squares: (): PageSelector => pageSelectorWithContext({ ...context, toUnits: 'squares' }),
+    toPageUnits: (): PageSelector => pageSelectorWithContext({ ...context, toUnits: 'pageUnits' }),
+    toPixels: (): PageSelector => pageSelectorWithContext({ ...context, toUnits: 'pixels' }),
+    toSquares: (): PageSelector => pageSelectorWithContext({ ...context, toUnits: 'squares' }),
   });
 
   const fromUnitsSelectorWithContext = (context: ConvertContextType): FromUnitsSelector => ({
-    pageUnits: (): ToUnitsSelector => toUnitsSelectorWithContext({ ...context, fromUnits: 'pageUnits' }),
-    pixels: (): ToUnitsSelector => toUnitsSelectorWithContext({ ...context, fromUnits: 'pixels' }),
-    squares: (): ToUnitsSelector => toUnitsSelectorWithContext({ ...context, fromUnits: 'squares' }),
+    fromPageUnits: (): ToUnitsSelector => toUnitsSelectorWithContext({ ...context, fromUnits: 'pageUnits' }),
+    fromPixels: (): ToUnitsSelector => toUnitsSelectorWithContext({ ...context, fromUnits: 'pixels' }),
+    fromSquares: (): ToUnitsSelector => toUnitsSelectorWithContext({ ...context, fromUnits: 'squares' }),
   });
 
   return {

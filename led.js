@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 const Led = (() => {
+    const errorPrefix = 'LED-ERROR:';
     const getGraphicCenterCoords = (graphic) => [
         graphic.get('left'),
         graphic.get('top'),
@@ -13,7 +14,7 @@ const Led = (() => {
             return getGraphicCenterCoords(a);
         }
         else {
-            log('LED-ERROR: LED received invalid input');
+            log(`${errorPrefix} LED received invalid input`);
             return;
         }
     };
@@ -21,12 +22,9 @@ const Led = (() => {
         if (pageId)
             return getObj('page', pageId);
         if (startGraphicPageId) {
-            if (endGraphicPageId) {
-                if (startGraphicPageId !== endGraphicPageId) {
-                    log('LEG-ERROR: supplied graphics are on different pages, could not get current page');
-                    return;
-                }
-                return getObj('page', startGraphicPageId);
+            if (endGraphicPageId && startGraphicPageId !== endGraphicPageId) {
+                log(`${errorPrefix} supplied graphics are on different pages, could not get current page`);
+                return;
             }
             return getObj('page', startGraphicPageId);
         }
@@ -97,22 +95,22 @@ const Led = (() => {
         const byPageDistance = (pageId) => {
             const page = getPageByDetailsOrPlayerPage(startGraphicPageId, endGraphicPageId, pageId);
             if (!page) {
-                log('LED-ERROR: failed to get page');
+                log(`${errorPrefix} failed to get page`);
                 return;
             }
             const pageDiagonalType = page === null || page === void 0 ? void 0 : page.get('diagonaltype');
             if (!pageDiagonalType) {
-                log('LED-ERROR: could not get page diagonaltype');
+                log(`${errorPrefix} could not get page diagonaltype`);
                 return;
             }
             const distanceMethod = getPageDistanceMethod(pageDiagonalType);
             if (!distanceMethod) {
-                log('LED-ERROR: invalid page diagonaltype');
+                log(`${errorPrefix} invalid page diagonaltype`);
                 return;
             }
             const distance = distanceMethod();
             if (distance === undefined) {
-                log('LED-ERROR: error running distance method');
+                log(`${errorPrefix} error running distance method`);
                 return;
             }
             return unitSelectorWithContext({ distance, page, startGraphicPageId, endGraphicPageId });
@@ -180,14 +178,14 @@ const Led = (() => {
         },
     });
     const toUnitsSelectorWithContext = (context) => ({
-        pageUnits: () => pageSelectorWithContext({ ...context, toUnits: 'pageUnits' }),
-        pixels: () => pageSelectorWithContext({ ...context, toUnits: 'pixels' }),
-        squares: () => pageSelectorWithContext({ ...context, toUnits: 'squares' }),
+        toPageUnits: () => pageSelectorWithContext({ ...context, toUnits: 'pageUnits' }),
+        toPixels: () => pageSelectorWithContext({ ...context, toUnits: 'pixels' }),
+        toSquares: () => pageSelectorWithContext({ ...context, toUnits: 'squares' }),
     });
     const fromUnitsSelectorWithContext = (context) => ({
-        pageUnits: () => toUnitsSelectorWithContext({ ...context, fromUnits: 'pageUnits' }),
-        pixels: () => toUnitsSelectorWithContext({ ...context, fromUnits: 'pixels' }),
-        squares: () => toUnitsSelectorWithContext({ ...context, fromUnits: 'squares' }),
+        fromPageUnits: () => toUnitsSelectorWithContext({ ...context, fromUnits: 'pageUnits' }),
+        fromPixels: () => toUnitsSelectorWithContext({ ...context, fromUnits: 'pixels' }),
+        fromSquares: () => toUnitsSelectorWithContext({ ...context, fromUnits: 'squares' }),
     });
     return {
         convert: (value) => fromUnitsSelectorWithContext({ value }),

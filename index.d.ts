@@ -1,22 +1,23 @@
 /// <reference types="roll20" />
+type ConversionUnits = 'pageUnits' | 'pixels' | 'squares';
 declare interface PageSelector {
     onPage(page: Page): number | undefined;
 }
 declare interface ToUnitsSelectorContext extends FromUnitsSelectorContext {
-    toUnits: keyof ToUnitsSelector;
+    toUnits: ConversionUnits;
 }
 declare interface ToUnitsSelector {
-    pageUnits(): PageSelector;
-    pixels(): PageSelector;
-    squares(): PageSelector;
+    toPageUnits(): PageSelector;
+    toPixels(): PageSelector;
+    toSquares(): PageSelector;
 }
 declare interface FromUnitsSelectorContext extends ConvertContextType {
-    fromUnits: keyof FromUnitsSelector;
+    fromUnits: ConversionUnits;
 }
 declare interface FromUnitsSelector {
-    pageUnits(): ToUnitsSelector;
-    pixels(): ToUnitsSelector;
-    squares(): ToUnitsSelector;
+    fromPageUnits(): ToUnitsSelector;
+    fromPixels(): ToUnitsSelector;
+    fromSquares(): ToUnitsSelector;
 }
 declare interface ConvertContextType {
     value: number;

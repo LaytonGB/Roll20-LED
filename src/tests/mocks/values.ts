@@ -121,7 +121,7 @@ const mockObjectParams: {
   {
     type: 'page',
     id: MockObjectName.MOCK_PAGE_VISITED,
-    properties: { diagonaltype: 'pythagoras', scale_number: 5, snapping_increment: 1 },
+    properties: { diagonaltype: 'pythagorean', scale_number: 5, snapping_increment: 1 },
   },
   { type: 'player', id: MockObjectName.MOCK_PLAYER },
 ];
