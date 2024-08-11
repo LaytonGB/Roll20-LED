@@ -6,7 +6,7 @@ A Roll20 utility API for easy distance calculations.
 
 ```ts
 const distanceFromGraphicToCoordinates = Led.from(myGraphic)
-  .to(3, 10)
-  .byPythagoras()
-  .inPageUnits();
+  ?.to(3, 10)
+  ?.byPythagoras()
+  ?.inPageUnits();
 ```
